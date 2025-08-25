@@ -5,12 +5,16 @@ import hljs from 'highlight.js';
 import 'highlight.js/styles/github-dark.css';
 import './App.css';
 
-const initialMarkdown = `# Welcome to Markdown Previewer
+const initialMarkdown = `# Welcome to the Experimental Markdown Previewer
 
-This editor supports **Markdown** and **LaTeX** math formulas.
+This page features an experimental "mixed copy" function.
 
-Right-click on any rendered formula to copy its **MathML** code to your clipboard.
-Or, upload a Markdown file using the button above.
+**How to use:**
+1. Select any content in the preview pane below (text, tables, formulas, etc.).
+2. Use your system's copy command (Ctrl+C or Cmd+C).
+3. Paste directly into a rich text editor like Microsoft Word.
+
+Formulas should remain editable.
 
 ## Math Examples
 
@@ -22,13 +26,6 @@ f(x) = \\int_{-\\infty}^\\infty
     \\hat f(\\xi)\\,e^{2 \\pi i \\xi x}
     \\,d\\xi
 $$
-
-## Code Example
-\`\`\`javascript
-function hello() {
-  console.log("Hello, World!");
-}
-\`\`\`
 `;
 
 const md = new MarkdownIt({
@@ -44,7 +41,7 @@ const md = new MarkdownIt({
   }
 }).use(temml);
 
-function App() {
+function ExperimentalPage() {
   const [markdown, setMarkdown] = useState(initialMarkdown);
   const [html, setHtml] = useState('');
   const [copyNotification, setCopyNotification] = useState({ visible: false, text: '' });
@@ -76,23 +73,42 @@ function App() {
     }, 2000);
   };
 
-  const handlePreviewContextMenu = (event) => {
-    const target = event.target;
-    const mathElement = target.closest('math');
 
-    if (mathElement) {
-      event.preventDefault();
-      // Clone the element to avoid modifying the live DOM
-      const mathClone = mathElement.cloneNode(true);
-      mathClone.setAttribute('xmlns', 'http://www.w3.org/1998/Math/MathML');
-      const mathml = mathClone.outerHTML;
+  const handleCopy = async (event) => {
+    event.preventDefault();
+    const selection = window.getSelection();
+    if (selection.rangeCount === 0) return;
 
-      navigator.clipboard.writeText(mathml).then(() => {
-        showNotification('MathML copied to clipboard!');
-      }).catch(err => {
-        console.error('Failed to copy MathML: ', err);
-        showNotification('Failed to copy MathML.');
+    try {
+      const range = selection.getRangeAt(0);
+      const selectedContent = range.cloneContents();
+
+      // Create a temporary div to hold the cloned content
+      const tempDiv = document.createElement('div');
+      tempDiv.appendChild(selectedContent);
+
+      // Add xmlns to all math elements
+      const mathElements = tempDiv.querySelectorAll('math');
+      mathElements.forEach(el => {
+        el.setAttribute('xmlns', 'http://www.w3.org/1998/Math/MathML');
       });
+
+      const html = tempDiv.innerHTML;
+      const text = tempDiv.innerText;
+
+      const htmlBlob = new Blob([html], { type: 'text/html' });
+      const textBlob = new Blob([text], { type: 'text/plain' });
+
+      const clipboardItem = new ClipboardItem({
+        'text/html': htmlBlob,
+        'text/plain': textBlob,
+      });
+
+      await navigator.clipboard.write([clipboardItem]);
+      showNotification('Copied to clipboard!');
+    } catch (err) {
+      console.error('Failed to copy: ', err);
+      showNotification('Error: Could not copy.');
     }
   };
 
@@ -120,13 +136,10 @@ function App() {
       )}
       <header className="app-header">
         <div className="header-content">
-          <h1>Markdown Previewer with MathML</h1>
-          <div className="header-actions">
-            <a href="/experimental.html" className="nav-link">Experimental Page</a>
-            <button className="upload-btn" onClick={handleUploadClick}>
-              Upload .md File
-            </button>
-          </div>
+          <h1>Experimental Markdown Previewer</h1>
+          <button className="upload-btn" onClick={handleUploadClick}>
+            Upload .md File
+          </button>
           <input
             type="file"
             ref={fileInputRef}
@@ -145,7 +158,7 @@ function App() {
             aria-label="Markdown Input"
           />
         </div>
-        <div className="preview-pane" onContextMenu={handlePreviewContextMenu}>
+        <div className="preview-pane" onCopy={handleCopy}>
           <div
             ref={previewRef}
             className="preview markdown-body"
@@ -157,4 +170,4 @@ function App() {
   );
 }
 
-export default App;
+export default ExperimentalPage;

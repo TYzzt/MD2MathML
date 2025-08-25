@@ -33,6 +33,22 @@ body {
   margin: 0 auto;
 }
 
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.nav-link {
+  color: #8ab4f8;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.nav-link:hover {
+  text-decoration: underline;
+}
+
 .app-header h1 {
   margin: 0;
   font-size: 1.2rem;

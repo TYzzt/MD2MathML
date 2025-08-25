@@ -9,7 +9,7 @@ const initialMarkdown = `# Welcome to Markdown Previewer
 
 This editor supports **Markdown** and **LaTeX** math formulas.
 
-Click on any rendered formula to copy its **MathML** code to your clipboard.
+Right-click on any rendered formula to copy its **MathML** code to your clipboard.
 Or, upload a Markdown file using the button above.
 
 ## Math Examples
@@ -36,7 +36,9 @@ const md = new MarkdownIt({
     if (lang && hljs.getLanguage(lang)) {
       try {
         return `<pre><code class="hljs">${hljs.highlight(str, { language: lang, ignoreIllegals: true }).value}</code></pre>`;
-      } catch (__) {}
+      } catch (e) { // eslint-disable-line no-unused-vars
+        // ignore highlight errors
+      }
     }
     return `<pre><code class="hljs">${md.utils.escapeHtml(str)}</code></pre>`;
   }
@@ -64,17 +66,18 @@ function App() {
     }, 2000);
   };
 
-  const handlePreviewClick = (event) => {
+  const handlePreviewContextMenu = (event) => {
     const target = event.target;
     const mathElement = target.closest('math');
 
     if (mathElement) {
+      event.preventDefault();
       const mathml = mathElement.outerHTML;
       navigator.clipboard.writeText(mathml).then(() => {
-        showNotification('Copied MathML to clipboard!');
+        showNotification('MathML copied to clipboard!');
       }).catch(err => {
         console.error('Failed to copy MathML: ', err);
-        showNotification('Error: Could not copy.');
+        showNotification('Failed to copy MathML.');
       });
     }
   };
@@ -125,9 +128,9 @@ function App() {
             aria-label="Markdown Input"
           />
         </div>
-        <div className="preview-pane" onClick={handlePreviewClick}>
+        <div className="preview-pane" onContextMenu={handlePreviewContextMenu}>
           <div
-            className="preview"
+            className="preview markdown-body"
             dangerouslySetInnerHTML={{ __html: html }}
           />
         </div>

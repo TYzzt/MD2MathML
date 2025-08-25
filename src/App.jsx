@@ -49,11 +49,21 @@ function App() {
   const [html, setHtml] = useState('');
   const [copyNotification, setCopyNotification] = useState({ visible: false, text: '' });
   const fileInputRef = useRef(null);
+  const previewRef = useRef(null);
 
   useEffect(() => {
     const renderedHtml = md.render(markdown);
     setHtml(renderedHtml);
   }, [markdown]);
+
+  useEffect(() => {
+    if (previewRef.current) {
+      const mathElements = previewRef.current.querySelectorAll('math');
+      mathElements.forEach(el => {
+        el.setAttribute('title', 'Right-click to copy MathML');
+      });
+    }
+  }, [html]);
 
   const handleMarkdownChange = (event) => {
     setMarkdown(event.target.value);
@@ -134,6 +144,7 @@ function App() {
         </div>
         <div className="preview-pane" onContextMenu={handlePreviewContextMenu}>
           <div
+            ref={previewRef}
             className="preview markdown-body"
             dangerouslySetInnerHTML={{ __html: html }}
           />

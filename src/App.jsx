@@ -72,7 +72,11 @@ function App() {
 
     if (mathElement) {
       event.preventDefault();
-      const mathml = mathElement.outerHTML;
+      // Clone the element to avoid modifying the live DOM
+      const mathClone = mathElement.cloneNode(true);
+      mathClone.setAttribute('xmlns', 'http://www.w3.org/1998/Math/MathML');
+      const mathml = mathClone.outerHTML;
+
       navigator.clipboard.writeText(mathml).then(() => {
         showNotification('MathML copied to clipboard!');
       }).catch(err => {

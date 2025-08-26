@@ -1,34 +1,30 @@
-<svg width="256" height="128" viewBox="0 0 200 100" xmlns="http://www.w3.org/2000/svg">
+<svg width="400" height="100" viewBox="0 0 400 100" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#8ab4f8;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#646cff;stop-opacity:1" />
+    <linearGradient id="text-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#8ab4f8;" />
+      <stop offset="100%" style="stop-color:#535bf2;" />
     </linearGradient>
   </defs>
   <style>
-    .icon { fill: url(#grad); }
-    .text {
-      font-family: "Courier New", monospace;
-      font-size: 24px;
+    .title {
+      font-family: "Segoe UI", Arial, sans-serif;
+      font-size: 50px;
       font-weight: bold;
-      fill: #ffffff;
+      fill: url(#text-grad);
     }
     .arrow {
-      font-family: Arial, sans-serif;
-      font-size: 30px;
+      font-family: "Segoe UI Symbol", sans-serif;
       fill: #cccccc;
+      font-size: 40px;
+    }
+    .sup {
+      font-size: 30px;
     }
   </style>
 
-  <g transform="translate(10, 20)">
-    <rect width="60" height="60" rx="8" class="icon" />
-    <text x="15" y="38" class="text">MD</text>
-  </g>
-
-  <text x="88" y="58" class="arrow">→</text>
-
-  <g transform="translate(120, 20)">
-     <rect width="60" height="60" rx="8" class="icon" />
-     <text x="18" y="42" font-size="30" font-family="Times New Roman" class="text">Σ</text>
-  </g>
+  <text x="10" y="65" class="title">MD</text>
+  <text x="105" y="62" class="arrow">→</text>
+  <text x="150" y="65" class="title">
+    MathML
+  </text>
 </svg>

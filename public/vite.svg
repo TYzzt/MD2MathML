@@ -1,29 +1,34 @@
-<svg width="256" height="256" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" font-family="Arial, sans-serif">
+<svg width="256" height="128" viewBox="0 0 200 100" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#8ab4f8;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#646cff;stop-opacity:1" />
+    </linearGradient>
+  </defs>
   <style>
+    .icon { fill: url(#grad); }
     .text {
-      font-size: 32px;
+      font-family: "Courier New", monospace;
+      font-size: 24px;
       font-weight: bold;
-      fill: #646cff; /* 主题蓝色 */
+      fill: #ffffff;
     }
     .arrow {
-      stroke: #8ab4f8; /* 辅助蓝色 */
-      stroke-width: 4;
-      stroke-linecap: round;
-      fill: none;
-    }
-    .symbol {
-      font-size: 20px;
-      fill: #cccccc; /* 浅灰色 */
+      font-family: Arial, sans-serif;
+      font-size: 30px;
+      fill: #cccccc;
     }
   </style>
 
-  <text x="10" y="75" class="text">MD</text>
+  <g transform="translate(10, 20)">
+    <rect width="60" height="60" rx="8" class="icon" />
+    <text x="15" y="38" class="text">MD</text>
+  </g>
 
-  <path d="M 50 65 L 70 45" class="arrow" />
-  <path d="M 70 45 L 60 45" class="arrow" />
-  <path d="M 70 45 L 70 55" class="arrow" />
+  <text x="88" y="58" class="arrow">→</text>
 
-  <text x="70" y="40" class="text">M</text>
-  <text x="85" y="28" class="symbol">∫</text>
-
+  <g transform="translate(120, 20)">
+     <rect width="60" height="60" rx="8" class="icon" />
+     <text x="18" y="42" font-size="30" font-family="Times New Roman" class="text">Σ</text>
+  </g>
 </svg>

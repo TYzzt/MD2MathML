@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import FeedbackButton from './FeedbackButton';
 import MarkdownIt from 'markdown-it';
 import temml from '@traeblain/markdown-it-temml';
 import hljs from 'highlight.js';
@@ -153,6 +154,7 @@ function App() {
           />
         </div>
       </main>
+      <FeedbackButton />
     </div>
   );
 }

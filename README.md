@@ -1,113 +1,47 @@
+# MD2MathML
 
-需求文档：Markdown → Web预览 & 公式复制 (MathML)
+### Overview
 
-1. 项目目标
+An online Markdown previewer with LaTeX support, designed to solve the problem of easily migrating math formulas from Markdown to Microsoft Word.
 
-本项目旨在提供一个在线工具，用户可以输入或导入 Markdown 文档，在 Web 界面中进行预览。预览过程中，支持 数学公式渲染，并允许用户 复制公式为 MathML 格式，以便粘贴到 Word 等支持 MathML 的软件中。
+This tool allows you to get a live preview of your Markdown text and, with a simple right-click, copy rendered math formulas as MathML. You can then paste them directly into rich-text editors like Word as **editable equations**.
 
-2. 功能需求
+### Key Features
 
-2.1 Markdown 输入与导入
+  * **Live Preview**: Instantly renders Markdown as you type in the editor.
+  * **Math Formula Support**: Powered by `@traeblain/markdown-it-temml`, it supports both inline (`$...$`) and block (`$$...$$`) math formulas.
+  * **Copy to Word**: Simply **right-click** any formula in the preview pane to copy its MathML code to the clipboard. Paste it directly into Microsoft Word.
+  * **File Upload**: Supports uploading local `.md` files for quick previewing.
+  * **Syntax Highlighting**: Provides syntax highlighting for various programming languages in code blocks.
 
-输入方式
+### How to Use
 
-支持用户在页面内输入 Markdown 文本（编辑器区域）。
+1.  Enter your Markdown text in the left-hand editor pane.
+2.  Alternatively, click the "Upload .md File" button to select a local file.
+3.  The right-hand pane will display the live rendered preview.
+4.  To copy a math formula, hover over it in the preview pane and **right-click**. The MathML code will be copied to your clipboard.
+5.  Open Microsoft Word and paste.
 
-支持上传 .md 文件（文件导入）。
+### Tech Stack
 
-基本要求
+  * **Framework**: [React](https://reactjs.org/)
+  * **Build Tool**: [Vite](https://vitejs.dev/)
+  * **Markdown Parsing**: [markdown-it](https://github.com/markdown-it/markdown-it)
+  * **Math Rendering**: [@traeblain/markdown-it-temml](https://github.com/traeblain/markdown-it-temml)
+  * **Syntax Highlighting**: [highlight.js](https://highlightjs.org/)
 
-解析 Markdown 标准语法（标题、列表、表格、代码块、引用等）。
+### Running Locally
 
-保持原始文档结构与排版。
+```bash
+# Clone the repository
+git clone <repository-url>
 
-2.2 Web 端预览
+# Navigate to the project directory
+cd MD2MathML
 
-实时渲染 Markdown 为 HTML。
+# Install dependencies
+npm install
 
-同步预览（编辑时实时更新）。
-
-支持渲染公式（行内公式、块级公式）。
-
-2.3 数学公式支持
-
-支持公式书写格式：
-
-行内公式：$...$
-
-块级公式：$$...$$
-
-使用 Temml 进行公式渲染。
-
-在预览中，公式显示为正常渲染效果，同时保留 MathML 数据。
-
-2.4 公式复制功能
-
-用户右键或点击公式时，可以选择 复制为 MathML。
-
-MathML 内容复制到剪贴板。
-
-复制的内容可直接粘贴到 Microsoft Word（或其他支持 MathML 的编辑器）。
-
-3. 非功能需求
-
-兼容性：支持 Chrome、Edge、Firefox、Safari 最新版本。
-
-易用性：UI 简洁，预览效果清晰，复制操作直观。
-
-性能：Markdown + 公式解析应在 500ms 内完成（单篇文档 < 1MB）。
-
-4. 技术方案
-
-4.1 前端
-
-框架：React 或纯前端（Vanilla JS）。
-
-Markdown 渲染：markdown-it 或 marked.js。
-
-公式渲染：Temml（可输出 MathML）。
-
-剪贴板支持：使用 navigator.clipboard.writeText() API。
-
-4.2 后端
-
-可选：无后端方案（纯前端渲染，适合部署在静态网站，如 Vercel、GitHub Pages）。
-
-如需支持大文件或格式转换（如导出 Word/PDF），可提供 Node.js + Express 后端。
-
-4.3 部署
-
-可部署在：
-
-GitHub Pages（静态站点，0 成本）
-
-Vercel / Netlify
-
-Fly.io / Render（如需后端）
-
-5. 界面原型（初步设想）
-
-+--------------------------------------------------------+
-
-| 导航栏: [上传Markdown] [粘贴文本] [导出Word]           |
-
-+--------------------------------------------------------+
-
-| 左侧: Markdown编辑区    | 右侧: 预览区 (渲染后的HTML) |
-
-|                         |                             |
-
-|                         |   数学公式 √ 复制MathML     |
-
-|                         |   表格、列表、代码          |
-
-+--------------------------------------------------------+
-
-6. 未来扩展
-
-支持 Markdown → Word/PDF 一键导出（调用 Pandoc API）。
-
-支持 Markdown 中的 Mermaid 流程图渲染。
-
-提供浏览器插件版（Edge/Chrome 插件），直接在网页中复制公式为 MathML。
-
+# Start the development server
+npm run dev
+```

@@ -211,3 +211,41 @@ body {
   0%, 100% { opacity: 0; }
   10%, 90% { opacity: 1; }
 }
+
+/* Responsive design for mobile devices */
+@media (max-width: 768px) {
+  .header-content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+    padding: 1rem;
+  }
+
+  .app-header h1 {
+    font-size: 1rem;
+  }
+
+  .header-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .main-content {
+    flex-direction: column;
+  }
+
+  .editor-pane,
+  .preview-pane {
+    width: 100%;
+    height: 50vh;
+    border-right: none;
+  }
+
+  .editor-pane {
+    border-bottom: 1px solid #333;
+  }
+
+  .preview {
+    padding: 1rem;
+  }
+}

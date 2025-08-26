@@ -1,30 +1,29 @@
-<svg width="400" height="100" viewBox="0 0 400 100" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <linearGradient id="text-grad" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" style="stop-color:#8ab4f8;" />
-      <stop offset="100%" style="stop-color:#535bf2;" />
-    </linearGradient>
-  </defs>
+<svg width="256" height="256" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" font-family="Arial, sans-serif">
   <style>
-    .title {
-      font-family: "Segoe UI", Arial, sans-serif;
-      font-size: 50px;
+    .text {
+      font-size: 32px;
       font-weight: bold;
-      fill: url(#text-grad);
+      fill: #646cff; /* 主题蓝色 */
     }
     .arrow {
-      font-family: "Segoe UI Symbol", sans-serif;
-      fill: #cccccc;
-      font-size: 40px;
+      stroke: #8ab4f8; /* 辅助蓝色 */
+      stroke-width: 4;
+      stroke-linecap: round;
+      fill: none;
     }
-    .sup {
-      font-size: 30px;
+    .symbol {
+      font-size: 20px;
+      fill: #cccccc; /* 浅灰色 */
     }
   </style>
 
-  <text x="10" y="65" class="title">MD</text>
-  <text x="105" y="62" class="arrow">→</text>
-  <text x="150" y="65" class="title">
-    MathML
-  </text>
+  <text x="10" y="75" class="text">MD</text>
+
+  <path d="M 50 65 L 70 45" class="arrow" />
+  <path d="M 70 45 L 60 45" class="arrow" />
+  <path d="M 70 45 L 70 55" class="arrow" />
+
+  <text x="70" y="40" class="text">M</text>
+  <text x="85" y="28" class="symbol">∫</text>
+
 </svg>

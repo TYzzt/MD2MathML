@@ -7,17 +7,25 @@ import 'highlight.js/styles/github-dark.css';
 import './App.css';
 
 const initialMarkdown = `# Welcome to Markdown Previewer
+# 欢迎使用 Markdown 预览器
 
 This editor supports **Markdown** and **LaTeX** math formulas.
+本编辑器支持 **Markdown** 和 **LaTeX** 数学公式。
 
 Right-click on any rendered formula to copy its **MathML** code to your clipboard.
+在渲染出的公式上右键点击，可将其 **MathML** 代码复制到剪贴板。
+
 Or, upload a Markdown file using the button above.
+或者，使用上方的按钮上传 Markdown 文件。
 
 ## Math Examples
+## 数学公式示例
 
 Inline formula: $E=mc^2$
+行内公式：$E=mc^2$
 
 Block formula:
+块级公式：
 $$
 f(x) = \\int_{-\\infty}^\\infty
     \\hat f(\\xi)\\,e^{2 \\pi i \\xi x}
@@ -25,6 +33,7 @@ f(x) = \\int_{-\\infty}^\\infty
 $$
 
 ## Code Example
+## 代码示例
 \`\`\`javascript
 function hello() {
   console.log("Hello, World!");

@@ -86,6 +86,27 @@ function App() {
     }, 2000);
   };
 
+  const fallbackCopy = (text) => {
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    textArea.style.position = 'fixed';  // Prevent scrolling to bottom
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    try {
+      const successful = document.execCommand('copy');
+      if (successful) {
+        showNotification('MathML copied to clipboard!');
+      } else {
+        showNotification('Failed to copy MathML.');
+      }
+    } catch (err) {
+      console.error('Fallback: Oops, unable to copy', err);
+      showNotification('Failed to copy MathML.');
+    }
+    document.body.removeChild(textArea);
+  };
+
   const handlePreviewContextMenu = (event) => {
     const target = event.target;
     const mathElement = target.closest('math');
@@ -97,11 +118,15 @@ function App() {
       mathClone.setAttribute('xmlns', 'http://www.w3.org/1998/Math/MathML');
       const mathml = mathClone.outerHTML;
 
+      if (!navigator.clipboard || !navigator.clipboard.writeText) {
+        fallbackCopy(mathml);
+        return;
+      }
       navigator.clipboard.writeText(mathml).then(() => {
         showNotification('MathML copied to clipboard!');
       }).catch(err => {
-        console.error('Failed to copy MathML: ', err);
-        showNotification('Failed to copy MathML.');
+        console.error('Failed to copy MathML with clipboard API, trying fallback: ', err);
+        fallbackCopy(mathml);
       });
     }
   };

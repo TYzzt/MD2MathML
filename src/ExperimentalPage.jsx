@@ -75,6 +75,12 @@ function ExperimentalPage() {
 
 
   const handleCopy = async (event) => {
+    // 检查是否支持 ClipboardItem，Safari 不完全支持
+    if (typeof ClipboardItem === "undefined" || !navigator.clipboard.write) {
+        showNotification('This browser does not support mixed copy. Please use Chrome or Firefox.');
+        return;
+    }
+
     event.preventDefault();
     const selection = window.getSelection();
     if (selection.rangeCount === 0) return;
@@ -82,12 +88,9 @@ function ExperimentalPage() {
     try {
       const range = selection.getRangeAt(0);
       const selectedContent = range.cloneContents();
-
-      // Create a temporary div to hold the cloned content
       const tempDiv = document.createElement('div');
       tempDiv.appendChild(selectedContent);
 
-      // Add xmlns to all math elements
       const mathElements = tempDiv.querySelectorAll('math');
       mathElements.forEach(el => {
         el.setAttribute('xmlns', 'http://www.w3.org/1998/Math/MathML');

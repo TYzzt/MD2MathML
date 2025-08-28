@@ -86,6 +86,46 @@ function App() {
     }, 2000);
   };
 
+  const fallbackCopy = (textToCopy) => {
+    const textArea = document.createElement('textarea');
+    textArea.value = textToCopy;
+
+    // Make the textarea out of sight
+    textArea.style.position = 'fixed';
+    textArea.style.top = '-9999px';
+    textArea.style.left = '-9999px';
+
+    document.body.appendChild(textArea);
+
+    // Specific selection logic for Safari / iOS
+    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+    if (isSafari) {
+        const range = document.createRange();
+        range.selectNodeContents(textArea);
+        const selection = window.getSelection();
+        selection.removeAllRanges();
+        selection.addRange(range);
+        textArea.setSelectionRange(0, 999999);
+    } else {
+        textArea.select();
+    }
+
+    let success = false;
+    try {
+      success = document.execCommand('copy');
+    } catch (err) {
+      console.error('Fallback copy failed', err);
+    }
+
+    if (success) {
+      showNotification('MathML copied to clipboard!');
+    } else {
+      showNotification('Failed to copy MathML.');
+    }
+
+    document.body.removeChild(textArea);
+  };
+
   const handlePreviewContextMenu = (event) => {
     const target = event.target;
     const mathElement = target.closest('math');
@@ -96,35 +136,18 @@ function App() {
       mathClone.setAttribute('xmlns', 'http://www.w3.org/1998/Math/MathML');
       const mathml = mathClone.outerHTML;
 
-      // 检查是否支持现代 Clipboard API
+      // Modern API first
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(mathml).then(() => {
           showNotification('MathML copied to clipboard!');
         }).catch(err => {
-          console.error('Failed to copy MathML: ', err);
-          showNotification('Failed to copy MathML.');
+          // If modern API fails, it could be a permission issue.
+          // Fallback to the old method just in case.
+          console.error('Failed to copy MathML using modern API: ', err);
+          fallbackCopy(mathml);
         });
       } else {
-        // 为 Safari 等旧浏览器提供降级方案
-        const textArea = document.createElement('textarea');
-        textArea.value = mathml;
-        textArea.style.position = 'fixed'; // 防止屏幕滚动
-        textArea.style.left = '-9999px';
-        document.body.appendChild(textArea);
-        textArea.focus();
-        textArea.select();
-        try {
-          const successful = document.execCommand('copy');
-          if (successful) {
-            showNotification('MathML copied to clipboard!');
-          } else {
-            showNotification('Failed to copy MathML.');
-          }
-        } catch (err) {
-          console.error('Fallback failed to copy MathML: ', err);
-          showNotification('Failed to copy MathML.');
-        }
-        document.body.removeChild(textArea);
+        fallbackCopy(mathml);
       }
     }
   };

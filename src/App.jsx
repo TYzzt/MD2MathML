@@ -92,17 +92,40 @@ function App() {
 
     if (mathElement) {
       event.preventDefault();
-      // Clone the element to avoid modifying the live DOM
       const mathClone = mathElement.cloneNode(true);
       mathClone.setAttribute('xmlns', 'http://www.w3.org/1998/Math/MathML');
       const mathml = mathClone.outerHTML;
 
-      navigator.clipboard.writeText(mathml).then(() => {
-        showNotification('MathML copied to clipboard!');
-      }).catch(err => {
-        console.error('Failed to copy MathML: ', err);
-        showNotification('Failed to copy MathML.');
-      });
+      // 检查是否支持现代 Clipboard API
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(mathml).then(() => {
+          showNotification('MathML copied to clipboard!');
+        }).catch(err => {
+          console.error('Failed to copy MathML: ', err);
+          showNotification('Failed to copy MathML.');
+        });
+      } else {
+        // 为 Safari 等旧浏览器提供降级方案
+        const textArea = document.createElement('textarea');
+        textArea.value = mathml;
+        textArea.style.position = 'fixed'; // 防止屏幕滚动
+        textArea.style.left = '-9999px';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        try {
+          const successful = document.execCommand('copy');
+          if (successful) {
+            showNotification('MathML copied to clipboard!');
+          } else {
+            showNotification('Failed to copy MathML.');
+          }
+        } catch (err) {
+          console.error('Fallback failed to copy MathML: ', err);
+          showNotification('Failed to copy MathML.');
+        }
+        document.body.removeChild(textArea);
+      }
     }
   };
 

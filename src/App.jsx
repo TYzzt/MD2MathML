@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import FeedbackButton from './FeedbackButton';
+import SupportUs from './SupportUs';
+import './SupportUs.css';
 import MarkdownIt from 'markdown-it';
 import temml from '@traeblain/markdown-it-temml';
 import hljs from 'highlight.js';
@@ -57,6 +59,7 @@ function App() {
   const [markdown, setMarkdown] = useState(initialMarkdown);
   const [html, setHtml] = useState('');
   const [copyNotification, setCopyNotification] = useState({ visible: false, text: '' });
+  const [showSupportUs, setShowSupportUs] = useState(false);
   const fileInputRef = useRef(null);
   const previewRef = useRef(null);
 
@@ -168,6 +171,7 @@ function App() {
 
   return (
     <div className="app-container">
+      <SupportUs show={showSupportUs} onClose={() => setShowSupportUs(false)} />
       {copyNotification.visible && (
         <div className="copy-notification">
           {copyNotification.text}
@@ -177,7 +181,9 @@ function App() {
         <div className="header-content">
           <h1>Markdown Previewer with MathML</h1>
           <div className="header-actions">
-            <a href="/experimental.html" className="nav-link">Experimental Page</a>
+            <button className="upload-btn" onClick={() => setShowSupportUs(true)}>
+              Support Us
+            </button>
             <button className="upload-btn" onClick={handleUploadClick}>
               Upload .md File
             </button>

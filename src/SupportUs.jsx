@@ -20,7 +20,9 @@ const SupportUs = ({ show, onClose }) => {
           </div>
           <div className="qr-code-container">
             <h3>PayPal</h3>
-            <img src="/paypal_qr.png" alt="PayPal QR Code" />
+            <a href="https://www.paypal.com/paypalme/uuuusite" target="_blank" rel="noopener noreferrer">
+              Go to PayPal
+            </a>
           </div>
         </div>
         <div className="modal-footer">

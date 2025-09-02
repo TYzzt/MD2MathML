@@ -184,7 +184,7 @@ function App() {
     }
   };
 
-  const handleDownloadDocx = async () => {
+  const handleDownloadDocx = async (template = null) => {
     // a. Get the current Markdown content from the markdown state.
     const content = markdown;
     if (!content) {
@@ -203,7 +203,12 @@ function App() {
       formData.append('file', file);
 
       // d. Use the fetch API to send the request.
-      const response = await fetch('https://markdown-to-word-converter.fly.dev/convert', {
+      let url = 'https://markdown-to-word-converter.fly.dev/convert';
+      if (template) {
+        url += `?template=${template}`;
+      }
+
+      const response = await fetch(url, {
         method: 'POST',
         body: formData,
       });
@@ -216,17 +221,17 @@ function App() {
       const blob = await response.blob();
 
       // f. Create a temporary link to trigger the download.
-      const url = window.URL.createObjectURL(blob);
+      const downloadUrl = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.style.display = 'none';
-      a.href = url;
+      a.href = downloadUrl;
       // g. Set the download attribute.
-      a.download = 'document.docx';
+      a.download = template ? `${template}.docx` : 'document.docx';
       document.body.appendChild(a);
       a.click();
 
       // h. Clean up.
-      window.URL.revokeObjectURL(url);
+      window.URL.revokeObjectURL(downloadUrl);
       document.body.removeChild(a);
 
     } catch (error) {
@@ -262,7 +267,7 @@ function App() {
             <button className="upload-btn" onClick={handleUploadClick}>
               Upload .md File
             </button>
-            <button className="upload-btn" onClick={handleDownloadDocx} disabled={isDownloading}>
+            <button className="upload-btn" onClick={() => handleDownloadDocx()} disabled={isDownloading}>
               {isDownloading ? 'Downloading...' : 'Download as .docx'}
             </button>
             <div className="more-menu-container" ref={moreMenuRef}>
@@ -273,6 +278,9 @@ function App() {
                 <div className="more-menu">
                   <button className="menu-item" onClick={handleRemoveCitations}>
                     Remove Citations
+                  </button>
+                  <button className="menu-item" onClick={() => handleDownloadDocx('acm')}>
+                    Download acm.docx
                   </button>
                 </div>
               )}

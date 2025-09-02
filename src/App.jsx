@@ -60,13 +60,28 @@ function App() {
   const [html, setHtml] = useState('');
   const [copyNotification, setCopyNotification] = useState({ visible: false, text: '' });
   const [showSupportUs, setShowSupportUs] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [showMoreMenu, setShowMoreMenu] = useState(false);
   const fileInputRef = useRef(null);
   const previewRef = useRef(null);
+  const moreMenuRef = useRef(null);
 
   useEffect(() => {
     const renderedHtml = md.render(markdown);
     setHtml(renderedHtml);
   }, [markdown]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (moreMenuRef.current && !moreMenuRef.current.contains(event.target)) {
+        setShowMoreMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   useEffect(() => {
     if (previewRef.current) {
@@ -169,6 +184,66 @@ function App() {
     }
   };
 
+  const handleDownloadDocx = async () => {
+    // a. Get the current Markdown content from the markdown state.
+    const content = markdown;
+    if (!content) {
+      alert('Markdown content is empty.');
+      return;
+    }
+
+    setIsDownloading(true);
+
+    try {
+      // b. Create a File object from the content.
+      const file = new File([content], "content.md", { type: "text/markdown" });
+
+      // c. Use FormData to prepare the file for the POST request.
+      const formData = new FormData();
+      formData.append('file', file);
+
+      // d. Use the fetch API to send the request.
+      const response = await fetch('https://markdown-to-word-converter.fly.dev/convert', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      // e. Handle the API response by creating a blob.
+      const blob = await response.blob();
+
+      // f. Create a temporary link to trigger the download.
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.style.display = 'none';
+      a.href = url;
+      // g. Set the download attribute.
+      a.download = 'document.docx';
+      document.body.appendChild(a);
+      a.click();
+
+      // h. Clean up.
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+    } catch (error) {
+      console.error('Download failed:', error);
+      alert('Failed to download the document. Please try again.');
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
+  const handleRemoveCitations = () => {
+    const citationRegex = /\[cite_start\]|\[cite_end\]|\[cite:\d+\]/g;
+    const cleanedMarkdown = markdown.replace(citationRegex, '');
+    setMarkdown(cleanedMarkdown);
+    setShowMoreMenu(false);
+  };
+
   return (
     <div className="app-container">
       <SupportUs show={showSupportUs} onClose={() => setShowSupportUs(false)} />
@@ -187,6 +262,21 @@ function App() {
             <button className="upload-btn" onClick={handleUploadClick}>
               Upload .md File
             </button>
+            <button className="upload-btn" onClick={handleDownloadDocx} disabled={isDownloading}>
+              {isDownloading ? 'Downloading...' : 'Download as .docx'}
+            </button>
+            <div className="more-menu-container" ref={moreMenuRef}>
+              <button className="upload-btn" onClick={() => setShowMoreMenu(!showMoreMenu)}>
+                More
+              </button>
+              {showMoreMenu && (
+                <div className="more-menu">
+                  <button className="menu-item" onClick={handleRemoveCitations}>
+                    Remove Citations
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
           <input
             type="file"

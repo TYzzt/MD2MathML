@@ -60,6 +60,7 @@ function App() {
   const [html, setHtml] = useState('');
   const [copyNotification, setCopyNotification] = useState({ visible: false, text: '' });
   const [showSupportUs, setShowSupportUs] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
   const fileInputRef = useRef(null);
   const previewRef = useRef(null);
 
@@ -169,6 +170,59 @@ function App() {
     }
   };
 
+  const handleDownloadDocx = async () => {
+    // a. Get the current Markdown content from the markdown state.
+    const content = markdown;
+    if (!content) {
+      alert('Markdown content is empty.');
+      return;
+    }
+
+    setIsDownloading(true);
+
+    try {
+      // b. Create a File object from the content.
+      const file = new File([content], "content.md", { type: "text/markdown" });
+
+      // c. Use FormData to prepare the file for the POST request.
+      const formData = new FormData();
+      formData.append('file', file);
+
+      // d. Use the fetch API to send the request.
+      const response = await fetch('https://markdown-to-word-converter.fly.dev/convert', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      // e. Handle the API response by creating a blob.
+      const blob = await response.blob();
+
+      // f. Create a temporary link to trigger the download.
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.style.display = 'none';
+      a.href = url;
+      // g. Set the download attribute.
+      a.download = 'document.docx';
+      document.body.appendChild(a);
+      a.click();
+
+      // h. Clean up.
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+    } catch (error) {
+      console.error('Download failed:', error);
+      alert('Failed to download the document. Please try again.');
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
   return (
     <div className="app-container">
       <SupportUs show={showSupportUs} onClose={() => setShowSupportUs(false)} />
@@ -186,6 +240,9 @@ function App() {
             </button>
             <button className="upload-btn" onClick={handleUploadClick}>
               Upload .md File
+            </button>
+            <button className="upload-btn" onClick={handleDownloadDocx} disabled={isDownloading}>
+              {isDownloading ? 'Downloading...' : 'Download as .docx'}
             </button>
           </div>
           <input

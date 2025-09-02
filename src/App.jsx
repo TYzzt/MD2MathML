@@ -61,13 +61,27 @@ function App() {
   const [copyNotification, setCopyNotification] = useState({ visible: false, text: '' });
   const [showSupportUs, setShowSupportUs] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [showMoreMenu, setShowMoreMenu] = useState(false);
   const fileInputRef = useRef(null);
   const previewRef = useRef(null);
+  const moreMenuRef = useRef(null);
 
   useEffect(() => {
     const renderedHtml = md.render(markdown);
     setHtml(renderedHtml);
   }, [markdown]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (moreMenuRef.current && !moreMenuRef.current.contains(event.target)) {
+        setShowMoreMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   useEffect(() => {
     if (previewRef.current) {
@@ -223,6 +237,13 @@ function App() {
     }
   };
 
+  const handleRemoveCitations = () => {
+    const citationRegex = /\[cite_start\]|\[cite_end\]|\[cite:\d+\]/g;
+    const cleanedMarkdown = markdown.replace(citationRegex, '');
+    setMarkdown(cleanedMarkdown);
+    setShowMoreMenu(false);
+  };
+
   return (
     <div className="app-container">
       <SupportUs show={showSupportUs} onClose={() => setShowSupportUs(false)} />
@@ -244,6 +265,18 @@ function App() {
             <button className="upload-btn" onClick={handleDownloadDocx} disabled={isDownloading}>
               {isDownloading ? 'Downloading...' : 'Download as .docx'}
             </button>
+            <div className="more-menu-container" ref={moreMenuRef}>
+              <button className="upload-btn" onClick={() => setShowMoreMenu(!showMoreMenu)}>
+                More
+              </button>
+              {showMoreMenu && (
+                <div className="more-menu">
+                  <button className="menu-item" onClick={handleRemoveCitations}>
+                    Remove Citations
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
           <input
             type="file"

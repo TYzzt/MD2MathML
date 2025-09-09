@@ -333,9 +333,6 @@ function App() {
             <button className="upload-btn" onClick={() => handleDownloadDocx()} disabled={isDownloading}>
               {isDownloading ? 'Downloading...' : 'Download as .docx'}
             </button>
-            <button className="upload-btn" onClick={handleCopyMarkdown}>
-              Copy Markdown
-            </button>
             <div className="more-menu-container" ref={moreMenuRef}>
               <button className="upload-btn" onClick={() => setShowMoreMenu(!showMoreMenu)}>
                 More
@@ -347,6 +344,9 @@ function App() {
                   </button>
                   <button className="menu-item" onClick={() => handleDownloadDocx('acm')}>
                     Download acm.docx
+                  </button>
+                  <button className="menu-item" onClick={handleCopyMarkdown}>
+                    Copy Markdown
                   </button>
                 </div>
               )}

@@ -55,6 +55,27 @@ const md = new MarkdownIt({
   }
 }).use(temml);
 
+const proxy = (tokens, idx, options, env, self) => self.renderToken(tokens, idx, options);
+const defaultParagraphRenderer = md.renderer.rules.paragraph_open || proxy;
+
+md.renderer.rules.paragraph_open = (tokens, idx, options, env, self) => {
+    const p = defaultParagraphRenderer(tokens, idx, options, env, self);
+    return `
+    <div class="paragraph-container">
+        <button class="copy-btn" title="Copy paragraph">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clipboard" viewBox="0 0 16 16">
+                <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/>
+                <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3z"/>
+            </svg>
+        </button>
+        ${p}`;
+};
+
+const defaultParagraphCloseRenderer = md.renderer.rules.paragraph_close || proxy;
+md.renderer.rules.paragraph_close = (tokens, idx, options, env, self) => {
+    return `${defaultParagraphCloseRenderer(tokens, idx, options, env, self)}</div>`;
+};
+
 function App() {
   const [markdown, setMarkdown] = useState(initialMarkdown);
   const [html, setHtml] = useState('');
@@ -103,7 +124,7 @@ function App() {
     }, 2000);
   };
 
-  const fallbackCopy = (textToCopy) => {
+  const fallbackCopy = (textToCopy, successMessage, failureMessage) => {
     const textArea = document.createElement('textarea');
     textArea.value = textToCopy;
 
@@ -135,9 +156,9 @@ function App() {
     }
 
     if (success) {
-      showNotification('MathML copied to clipboard!');
+      showNotification(successMessage);
     } else {
-      showNotification('Failed to copy MathML.');
+      showNotification(failureMessage);
     }
 
     document.body.removeChild(textArea);
@@ -152,19 +173,21 @@ function App() {
       const mathClone = mathElement.cloneNode(true);
       mathClone.setAttribute('xmlns', 'http://www.w3.org/1998/Math/MathML');
       const mathml = mathClone.outerHTML;
+      const successMessage = 'MathML copied to clipboard!';
+      const failureMessage = 'Failed to copy MathML.';
 
       // Modern API first
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(mathml).then(() => {
-          showNotification('MathML copied to clipboard!');
+          showNotification(successMessage);
         }).catch(err => {
           // If modern API fails, it could be a permission issue.
           // Fallback to the old method just in case.
           console.error('Failed to copy MathML using modern API: ', err);
-          fallbackCopy(mathml);
+          fallbackCopy(mathml, successMessage, failureMessage);
         });
       } else {
-        fallbackCopy(mathml);
+        fallbackCopy(mathml, successMessage, failureMessage);
       }
     }
   };
@@ -249,6 +272,46 @@ function App() {
     setShowMoreMenu(false);
   };
 
+  const handleCopyClick = (event) => {
+    const button = event.target.closest('.copy-btn');
+    if (button) {
+      const container = button.closest('.paragraph-container');
+      if (container) {
+        const paragraph = container.querySelector('p');
+        if (paragraph) {
+          const textToCopy = paragraph.innerText;
+          const successMessage = 'Paragraph copied to clipboard!';
+          const failureMessage = 'Failed to copy paragraph.';
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(textToCopy).then(() => {
+              showNotification(successMessage);
+            }).catch(err => {
+              console.error('Failed to copy text: ', err);
+              fallbackCopy(textToCopy, successMessage, failureMessage);
+            });
+          } else {
+            fallbackCopy(textToCopy, successMessage, failureMessage);
+          }
+        }
+      }
+    }
+  };
+
+  const handleCopyMarkdown = () => {
+    const successMessage = 'Markdown copied to clipboard!';
+    const failureMessage = 'Failed to copy markdown.';
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(markdown).then(() => {
+        showNotification(successMessage);
+      }).catch(err => {
+        console.error('Failed to copy markdown: ', err);
+        fallbackCopy(markdown, successMessage, failureMessage);
+      });
+    } else {
+      fallbackCopy(markdown, successMessage, failureMessage);
+    }
+  };
+
   return (
     <div className="app-container">
       <SupportUs show={showSupportUs} onClose={() => setShowSupportUs(false)} />
@@ -282,6 +345,9 @@ function App() {
                   <button className="menu-item" onClick={() => handleDownloadDocx('acm')}>
                     Download acm.docx
                   </button>
+                  <button className="menu-item" onClick={handleCopyMarkdown}>
+                    Copy Markdown
+                  </button>
                 </div>
               )}
             </div>
@@ -304,7 +370,7 @@ function App() {
             aria-label="Markdown Input"
           />
         </div>
-        <div className="preview-pane" onContextMenu={handlePreviewContextMenu}>
+        <div className="preview-pane" onContextMenu={handlePreviewContextMenu} onClick={handleCopyClick}>
           <div
             ref={previewRef}
             className="preview markdown-body"

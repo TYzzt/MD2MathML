@@ -266,7 +266,7 @@ function App() {
   };
 
   const handleRemoveCitations = () => {
-    const citationRegex = /\[cite_start\]|\[cite_end\]|\[cite:\s*[\d-]+(,\s*[\d-]+)*\]/g;
+    const citationRegex = /\[(cite_start|cite_end|cite:[^\]]*)\]/g;
     const cleanedMarkdown = markdown.replace(citationRegex, '');
     setMarkdown(cleanedMarkdown);
     setShowMoreMenu(false);

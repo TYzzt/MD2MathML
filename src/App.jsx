@@ -1,40 +1,45 @@
-import { useState, useEffect, useRef } from 'react';
-import FeedbackButton from './FeedbackButton';
-import SupportUs from './SupportUs';
-import './SupportUs.css';
+import { useEffect, useRef, useState } from 'react';
+import {
+  Check,
+  Clipboard,
+  Download,
+  FileUp,
+  Heart,
+  MoreHorizontal,
+  RefreshCcw,
+  Sparkles,
+  Trash2,
+} from 'lucide-react';
 import MarkdownIt from 'markdown-it';
 import temml from '@traeblain/markdown-it-temml';
 import hljs from 'highlight.js';
 import 'highlight.js/styles/github-dark.css';
+import FeedbackButton from './FeedbackButton';
+import SupportUs from './SupportUs';
 import './App.css';
 
-const initialMarkdown = `# Welcome to Markdown Previewer
-# 欢迎使用 Markdown 预览器
+const STORAGE_KEY = 'md2mathml.draft.v1';
 
-This editor supports **Markdown** and **LaTeX** math formulas.
-本编辑器支持 **Markdown** 和 **LaTeX** 数学公式。
+const initialMarkdown = `# Markdown + MathML, without the friction
 
-Right-click on any rendered formula to copy its **MathML** code, ready to be pasted into Microsoft Word as an editable equation.
-在渲染出的公式上右键点击，可将其 **MathML** 代码复制到剪贴板，并直接粘贴到 Microsoft Word 中作为可编辑的公式。
+Write Markdown and LaTeX on the left. See the rendered result instantly on the right.
 
-Or, upload a Markdown file using the button above.
-或者，使用上方的按钮上传 Markdown 文件。
+Click any formula to copy its **MathML**, ready to paste into Microsoft Word as an editable equation.
 
-## Math Examples
-## 数学公式示例
+## Math examples
 
-Inline formula 行内公式： $E=mc^2$
+Inline formula: $E=mc^2$
 
 Block formula:
-块级公式：
+
 $$
 f(x) = \\int_{-\\infty}^\\infty
-    \\hat f(\\xi)\\,e^{2 \\pi i \\xi x}
-    \\,d\\xi
+  \\hat f(\\xi)\\,e^{2 \\pi i \\xi x}
+  \\,d\\xi
 $$
 
-## Code Example
-## 代码示例
+## Code example
+
 \`\`\`javascript
 function hello() {
   console.log("Hello, World!");
@@ -43,53 +48,62 @@ function hello() {
 `;
 
 const md = new MarkdownIt({
-  highlight: function (str, lang) {
+  highlight(str, lang) {
     if (lang && hljs.getLanguage(lang)) {
       try {
         return `<pre><code class="hljs">${hljs.highlight(str, { language: lang, ignoreIllegals: true }).value}</code></pre>`;
-      } catch (e) { // eslint-disable-line no-unused-vars
-        // ignore highlight errors
+      } catch {
+        // Fall through to escaped plain text.
       }
     }
     return `<pre><code class="hljs">${md.utils.escapeHtml(str)}</code></pre>`;
-  }
+  },
 }).use(temml);
 
 const proxy = (tokens, idx, options, env, self) => self.renderToken(tokens, idx, options);
-const defaultParagraphRenderer = md.renderer.rules.paragraph_open || proxy;
+const defaultParagraphOpen = md.renderer.rules.paragraph_open || proxy;
+const defaultParagraphClose = md.renderer.rules.paragraph_close || proxy;
 
-md.renderer.rules.paragraph_open = (tokens, idx, options, env, self) => {
-    const p = defaultParagraphRenderer(tokens, idx, options, env, self);
-    return `
-    <div class="paragraph-container">
-        <button class="copy-btn" title="Copy paragraph">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clipboard" viewBox="0 0 16 16">
-                <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/>
-                <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3z"/>
-            </svg>
-        </button>
-        ${p}`;
-};
+md.renderer.rules.paragraph_open = (tokens, idx, options, env, self) => `
+  <div class="paragraph-container">
+    <button class="copy-paragraph-button" type="button" aria-label="Copy paragraph">Copy</button>
+    ${defaultParagraphOpen(tokens, idx, options, env, self)}`;
 
-const defaultParagraphCloseRenderer = md.renderer.rules.paragraph_close || proxy;
-md.renderer.rules.paragraph_close = (tokens, idx, options, env, self) => {
-    return `${defaultParagraphCloseRenderer(tokens, idx, options, env, self)}</div>`;
-};
+md.renderer.rules.paragraph_close = (tokens, idx, options, env, self) =>
+  `${defaultParagraphClose(tokens, idx, options, env, self)}</div>`;
+
+function getInitialMarkdown() {
+  try {
+    return window.localStorage.getItem(STORAGE_KEY) || initialMarkdown;
+  } catch {
+    return initialMarkdown;
+  }
+}
 
 function App() {
-  const [markdown, setMarkdown] = useState(initialMarkdown);
-  const [html, setHtml] = useState('');
-  const [copyNotification, setCopyNotification] = useState({ visible: false, text: '' });
+  const [markdown, setMarkdown] = useState(getInitialMarkdown);
+  const [html, setHtml] = useState(() => md.render(getInitialMarkdown()));
+  const [notification, setNotification] = useState({ visible: false, text: '' });
   const [showSupportUs, setShowSupportUs] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
+  const [activePane, setActivePane] = useState('editor');
   const fileInputRef = useRef(null);
   const previewRef = useRef(null);
   const moreMenuRef = useRef(null);
+  const notificationTimerRef = useRef(null);
 
   useEffect(() => {
-    const renderedHtml = md.render(markdown);
-    setHtml(renderedHtml);
+    setHtml(md.render(markdown));
+    const timer = window.setTimeout(() => {
+      try {
+        window.localStorage.setItem(STORAGE_KEY, markdown);
+      } catch {
+        // Editing still works when storage is blocked or full.
+      }
+    }, 250);
+
+    return () => window.clearTimeout(timer);
   }, [markdown]);
 
   useEffect(() => {
@@ -98,286 +112,303 @@ function App() {
         setShowMoreMenu(false);
       }
     };
+    const handleEscape = (event) => {
+      if (event.key === 'Escape') setShowMoreMenu(false);
+    };
+
     document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleEscape);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEscape);
     };
   }, []);
 
   useEffect(() => {
-    if (previewRef.current) {
-      const mathElements = previewRef.current.querySelectorAll('math');
-      mathElements.forEach(el => {
-        el.setAttribute('title', 'Right-click to copy MathML');
+    if (!previewRef.current) return;
+
+    const previewElement = previewRef.current;
+    const decorateMath = () => {
+      previewElement.querySelectorAll('math').forEach((element) => {
+        element.setAttribute('title', 'Click to copy MathML');
+        element.setAttribute('tabindex', '0');
+        element.setAttribute('role', 'button');
+        element.setAttribute('aria-label', 'Copy formula as MathML');
       });
-    }
+    };
+
+    decorateMath();
+    const observer = new MutationObserver(decorateMath);
+    observer.observe(previewElement, { childList: true, subtree: true });
+    return () => observer.disconnect();
   }, [html]);
 
-  const handleMarkdownChange = (event) => {
-    setMarkdown(event.target.value);
-  };
+  useEffect(() => () => window.clearTimeout(notificationTimerRef.current), []);
 
   const showNotification = (text) => {
-    setCopyNotification({ visible: true, text });
-    setTimeout(() => {
-      setCopyNotification({ visible: false, text: '' });
-    }, 2000);
+    window.clearTimeout(notificationTimerRef.current);
+    setNotification({ visible: true, text });
+    notificationTimerRef.current = window.setTimeout(() => {
+      setNotification({ visible: false, text: '' });
+    }, 2200);
   };
 
   const fallbackCopy = (textToCopy, successMessage, failureMessage) => {
     const textArea = document.createElement('textarea');
     textArea.value = textToCopy;
-
-    // Make the textarea out of sight
     textArea.style.position = 'fixed';
     textArea.style.top = '-9999px';
-    textArea.style.left = '-9999px';
-
     document.body.appendChild(textArea);
-
-    // Specific selection logic for Safari / iOS
-    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-    if (isSafari) {
-        const range = document.createRange();
-        range.selectNodeContents(textArea);
-        const selection = window.getSelection();
-        selection.removeAllRanges();
-        selection.addRange(range);
-        textArea.setSelectionRange(0, 999999);
-    } else {
-        textArea.select();
-    }
+    textArea.select();
 
     let success = false;
     try {
       success = document.execCommand('copy');
-    } catch (err) {
-      console.error('Fallback copy failed', err);
+    } catch {
+      success = false;
     }
-
-    if (success) {
-      showNotification(successMessage);
-    } else {
-      showNotification(failureMessage);
-    }
-
     document.body.removeChild(textArea);
+    showNotification(success ? successMessage : failureMessage);
+  };
+
+  const copyText = (text, successMessage, failureMessage) => {
+    if (navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(text)
+        .then(() => showNotification(successMessage))
+        .catch(() => fallbackCopy(text, successMessage, failureMessage));
+    } else {
+      fallbackCopy(text, successMessage, failureMessage);
+    }
+  };
+
+  const copyMathElement = (mathElement) => {
+    const mathClone = mathElement.cloneNode(true);
+    mathClone.removeAttribute('title');
+    mathClone.removeAttribute('tabindex');
+    mathClone.removeAttribute('role');
+    mathClone.removeAttribute('aria-label');
+    mathClone.setAttribute('xmlns', 'http://www.w3.org/1998/Math/MathML');
+    copyText(mathClone.outerHTML, 'MathML copied', 'Could not copy MathML');
+  };
+
+  const handlePreviewInteraction = (event) => {
+    const paragraphButton = event.target.closest('.copy-paragraph-button');
+    if (paragraphButton) {
+      const paragraph = paragraphButton.closest('.paragraph-container')?.querySelector('p');
+      if (paragraph) copyText(paragraph.innerText, 'Paragraph copied', 'Could not copy paragraph');
+      return;
+    }
+
+    const mathElement = event.target.closest('math');
+    if (mathElement) copyMathElement(mathElement);
+  };
+
+  const handlePreviewKeyDown = (event) => {
+    if (event.key !== 'Enter' && event.key !== ' ') return;
+    const mathElement = event.target.closest('math');
+    if (!mathElement) return;
+    event.preventDefault();
+    copyMathElement(mathElement);
   };
 
   const handlePreviewContextMenu = (event) => {
-    const target = event.target;
-    const mathElement = target.closest('math');
-
-    if (mathElement) {
-      event.preventDefault();
-      const mathClone = mathElement.cloneNode(true);
-      mathClone.setAttribute('xmlns', 'http://www.w3.org/1998/Math/MathML');
-      const mathml = mathClone.outerHTML;
-      const successMessage = 'MathML copied to clipboard!';
-      const failureMessage = 'Failed to copy MathML.';
-
-      // Modern API first
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(mathml).then(() => {
-          showNotification(successMessage);
-        }).catch(err => {
-          // If modern API fails, it could be a permission issue.
-          // Fallback to the old method just in case.
-          console.error('Failed to copy MathML using modern API: ', err);
-          fallbackCopy(mathml, successMessage, failureMessage);
-        });
-      } else {
-        fallbackCopy(mathml, successMessage, failureMessage);
-      }
-    }
-  };
-
-  const handleUploadClick = () => {
-    fileInputRef.current.click();
+    const mathElement = event.target.closest('math');
+    if (!mathElement) return;
+    event.preventDefault();
+    copyMathElement(mathElement);
   };
 
   const handleFileChange = (event) => {
     const file = event.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setMarkdown(e.target.result);
-      };
-      reader.readAsText(file);
-    }
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (loadEvent) => {
+      setMarkdown(loadEvent.target.result);
+      setActivePane('editor');
+      showNotification(`${file.name} loaded`);
+    };
+    reader.onerror = () => showNotification('Could not read that file');
+    reader.readAsText(file);
+    event.target.value = '';
   };
 
   const handleDownloadDocx = async (template = null) => {
-    // a. Get the current Markdown content from the markdown state.
-    const content = markdown;
-    if (!content) {
-      alert('Markdown content is empty.');
+    if (!markdown) {
+      showNotification('Add some Markdown before exporting');
       return;
     }
 
     setIsDownloading(true);
+    setShowMoreMenu(false);
 
     try {
-      // b. Create a File object from the content.
-      const file = new File([content], "content.md", { type: "text/markdown" });
-
-      // c. Use FormData to prepare the file for the POST request.
+      const file = new File([markdown], 'content.md', { type: 'text/markdown' });
       const formData = new FormData();
       formData.append('file', file);
 
-      // d. Use the fetch API to send the request.
       let url = 'https://markdown-to-word-converter.fly.dev/convert';
-      if (template) {
-        url += `?template=${template}`;
-      }
+      if (template) url += `?template=${template}`;
 
-      const response = await fetch(url, {
-        method: 'POST',
-        body: formData,
-      });
+      const response = await fetch(url, { method: 'POST', body: formData });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      // e. Handle the API response by creating a blob.
       const blob = await response.blob();
-
-      // f. Create a temporary link to trigger the download.
       const downloadUrl = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.style.display = 'none';
-      a.href = downloadUrl;
-      // g. Set the download attribute.
-      a.download = template ? `${template}.docx` : 'document.docx';
-      document.body.appendChild(a);
-      a.click();
-
-      // h. Clean up.
+      const anchor = document.createElement('a');
+      anchor.href = downloadUrl;
+      anchor.download = template ? `${template}.docx` : 'document.docx';
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
       window.URL.revokeObjectURL(downloadUrl);
-      document.body.removeChild(a);
-
-    } catch (error) {
-      console.error('Download failed:', error);
-      alert('Failed to download the document. Please try again.');
+      showNotification('Document downloaded');
+    } catch {
+      showNotification('Export failed. Please try again');
     } finally {
       setIsDownloading(false);
     }
   };
 
   const handleRemoveCitations = () => {
-    const citationRegex = /\[(cite\\?_start|cite\\?_end|cite:.*?)\]/g;
-    const cleanedMarkdown = markdown.replace(citationRegex, '');
-    setMarkdown(cleanedMarkdown);
+    setMarkdown((value) => value.replace(/\[(cite\\?_start|cite\\?_end|cite:.*?)\]/g, ''));
     setShowMoreMenu(false);
+    showNotification('Citations removed');
   };
 
-  const handleCopyClick = (event) => {
-    const button = event.target.closest('.copy-btn');
-    if (button) {
-      const container = button.closest('.paragraph-container');
-      if (container) {
-        const paragraph = container.querySelector('p');
-        if (paragraph) {
-          const textToCopy = paragraph.innerText;
-          const successMessage = 'Paragraph copied to clipboard!';
-          const failureMessage = 'Failed to copy paragraph.';
-          if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(textToCopy).then(() => {
-              showNotification(successMessage);
-            }).catch(err => {
-              console.error('Failed to copy text: ', err);
-              fallbackCopy(textToCopy, successMessage, failureMessage);
-            });
-          } else {
-            fallbackCopy(textToCopy, successMessage, failureMessage);
-          }
-        }
-      }
-    }
-  };
-
-  const handleCopyMarkdown = () => {
-    const successMessage = 'Markdown copied to clipboard!';
-    const failureMessage = 'Failed to copy markdown.';
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(markdown).then(() => {
-        showNotification(successMessage);
-      }).catch(err => {
-        console.error('Failed to copy markdown: ', err);
-        fallbackCopy(markdown, successMessage, failureMessage);
-      });
-    } else {
-      fallbackCopy(markdown, successMessage, failureMessage);
-    }
+  const handleRestoreSample = () => {
+    if (markdown !== initialMarkdown && !window.confirm('Replace your current draft with the sample document?')) return;
+    setMarkdown(initialMarkdown);
+    setShowMoreMenu(false);
+    setActivePane('editor');
+    showNotification('Sample restored');
   };
 
   return (
-    <div className="app-container">
+    <div className="app-shell">
       <SupportUs show={showSupportUs} onClose={() => setShowSupportUs(false)} />
-      {copyNotification.visible && (
-        <div className="copy-notification">
-          {copyNotification.text}
+
+      {notification.visible && (
+        <div className="toast" role="status" aria-live="polite">
+          <Check size={16} />
+          {notification.text}
         </div>
       )}
+
       <header className="app-header">
-        <div className="header-content">
-          <h1>Markdown Previewer with MathML</h1>
-          <div className="header-actions">
-            <button className="upload-btn" onClick={() => setShowSupportUs(true)}>
-              Support Us
-            </button>
-            <button className="upload-btn" onClick={handleUploadClick}>
-              Upload .md File
-            </button>
-            <button className="upload-btn" onClick={() => handleDownloadDocx()} disabled={isDownloading}>
-              {isDownloading ? 'Downloading...' : 'Download as .docx'}
-            </button>
-            <div className="more-menu-container" ref={moreMenuRef}>
-              <button className="upload-btn" onClick={() => setShowMoreMenu(!showMoreMenu)}>
-                More
-              </button>
-              {showMoreMenu && (
-                <div className="more-menu">
-                  <button className="menu-item" onClick={handleRemoveCitations}>
-                    Remove Citations
-                  </button>
-                  <button className="menu-item" onClick={() => handleDownloadDocx('acm')}>
-                    Download acm.docx
-                  </button>
-                  <button className="menu-item" onClick={handleCopyMarkdown}>
-                    Copy Markdown
-                  </button>
-                </div>
-              )}
-            </div>
+        <div className="brand" aria-label="MD2MathML">
+          <span className="brand-mark" aria-hidden="true">M²</span>
+          <div className="brand-copy">
+            <strong>MD2MathML</strong>
+            <span>Markdown equation workspace</span>
           </div>
-          <input
-            type="file"
-            ref={fileInputRef}
-            onChange={handleFileChange}
-            accept=".md"
-            style={{ display: 'none' }}
-          />
         </div>
+
+        <div className="header-actions">
+          <button className="button support-button" onClick={() => setShowSupportUs(true)} title="Support MD2MathML">
+            <Heart size={17} />
+            <span className="button-label">Support</span>
+          </button>
+          <button className="button secondary-button" onClick={() => fileInputRef.current?.click()} title="Upload Markdown file">
+            <FileUp size={17} />
+            <span className="button-label">Upload</span>
+          </button>
+          <button className="button primary-button" onClick={() => handleDownloadDocx()} disabled={isDownloading} title="Export as Word document">
+            {isDownloading ? <RefreshCcw className="spin" size={17} /> : <Download size={17} />}
+            <span className="button-label">{isDownloading ? 'Exporting' : 'Export .docx'}</span>
+          </button>
+          <div className="more-menu-container" ref={moreMenuRef}>
+            <button
+              className="icon-button header-more-button"
+              onClick={() => setShowMoreMenu((open) => !open)}
+              aria-label="More actions"
+              aria-expanded={showMoreMenu}
+              title="More actions"
+            >
+              <MoreHorizontal size={20} />
+            </button>
+            {showMoreMenu && (
+              <div className="more-menu" role="menu">
+                <button role="menuitem" onClick={() => {
+                  copyText(markdown, 'Markdown copied', 'Could not copy Markdown');
+                  setShowMoreMenu(false);
+                }}>
+                  <Clipboard size={16} />
+                  Copy Markdown
+                </button>
+                <button role="menuitem" onClick={handleRemoveCitations}>
+                  <Trash2 size={16} />
+                  Remove citations
+                </button>
+                <button role="menuitem" onClick={() => handleDownloadDocx('acm')}>
+                  <Download size={16} />
+                  Export ACM .docx
+                </button>
+                <div className="menu-separator" />
+                <button role="menuitem" onClick={handleRestoreSample}>
+                  <Sparkles size={16} />
+                  Restore sample
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <input
+          type="file"
+          ref={fileInputRef}
+          onChange={handleFileChange}
+          accept=".md,.markdown,text/markdown,text/plain"
+          hidden
+        />
       </header>
-      <main className="main-content">
-        <div className="editor-pane">
+
+      <nav className="mobile-pane-switcher" aria-label="Workspace view">
+        <button className={activePane === 'editor' ? 'active' : ''} onClick={() => setActivePane('editor')}>Editor</button>
+        <button className={activePane === 'preview' ? 'active' : ''} onClick={() => setActivePane('preview')}>Preview</button>
+      </nav>
+
+      <main className="workspace">
+        <section className={`workspace-pane editor-pane ${activePane === 'editor' ? 'mobile-active' : ''}`}>
+          <header className="pane-toolbar">
+            <div>
+              <span className="status-dot" aria-hidden="true" />
+              <strong>Markdown</strong>
+            </div>
+            <span>{markdown.length.toLocaleString()} characters</span>
+          </header>
           <textarea
             className="editor"
             value={markdown}
-            onChange={handleMarkdownChange}
-            aria-label="Markdown Input"
+            onChange={(event) => setMarkdown(event.target.value)}
+            aria-label="Markdown editor"
+            spellCheck="false"
           />
-        </div>
-        <div className="preview-pane" onContextMenu={handlePreviewContextMenu} onClick={handleCopyClick}>
+        </section>
+
+        <section className={`workspace-pane preview-pane ${activePane === 'preview' ? 'mobile-active' : ''}`}>
+          <header className="pane-toolbar">
+            <div>
+              <span className="status-dot preview-dot" aria-hidden="true" />
+              <strong>Preview</strong>
+            </div>
+            <span>Click a formula to copy MathML</span>
+          </header>
           <div
-            ref={previewRef}
-            className="preview markdown-body"
-            dangerouslySetInnerHTML={{ __html: html }}
-          />
-        </div>
+            className="preview-scroll"
+            onClick={handlePreviewInteraction}
+            onKeyDown={handlePreviewKeyDown}
+            onContextMenu={handlePreviewContextMenu}
+          >
+            <article
+              ref={previewRef}
+              className="preview markdown-body"
+              dangerouslySetInnerHTML={{ __html: html }}
+            />
+          </div>
+        </section>
       </main>
+
       <FeedbackButton />
     </div>
   );

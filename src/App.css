@@ -316,7 +316,7 @@
   margin: 0 0 24px;
   padding-bottom: 17px;
   border-bottom: 1px solid var(--border-color);
-  font-size: clamp(26px, 3vw, 34px);
+  font-size: 32px;
 }
 
 .preview h2 {
@@ -390,6 +390,20 @@
 .preview th {
   color: var(--text-primary);
   background: var(--surface-raised);
+}
+
+.preview.markdown-body table tr {
+  border-top-color: var(--border-color);
+  background: #101316;
+}
+
+.preview.markdown-body table tr:nth-child(2n) {
+  background: #15191d;
+}
+
+.preview td {
+  color: #c8ced6;
+  background: transparent;
 }
 
 .preview math {
@@ -478,6 +492,62 @@
   right: 18px;
   bottom: 18px;
   z-index: 30;
+}
+
+.export-feedback-prompt {
+  position: absolute;
+  right: 0;
+  bottom: 52px;
+  width: min(290px, calc(100vw - 32px));
+  padding: 13px;
+  border: 1px solid var(--border-strong);
+  border-radius: 7px;
+  color: var(--text-secondary);
+  background: var(--surface-raised);
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.48);
+}
+
+.export-feedback-prompt > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.export-feedback-prompt strong {
+  color: var(--text-primary);
+  font-size: 13px;
+}
+
+.export-feedback-prompt .icon-button {
+  flex: 0 0 28px;
+  width: 28px;
+  height: 28px;
+}
+
+.export-feedback-prompt .export-feedback-actions {
+  justify-content: flex-start;
+  margin-top: 10px;
+}
+
+.export-feedback-actions button {
+  display: inline-flex;
+  min-height: 30px;
+  align-items: center;
+  gap: 6px;
+  padding: 0 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: 5px;
+  color: var(--text-secondary);
+  background: #15191d;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.export-feedback-actions button:hover {
+  border-color: #5a94ff;
+  color: var(--text-primary);
 }
 
 .feedback-button {
@@ -589,6 +659,10 @@
     padding: 0 12px;
   }
 
+  .preview h1 {
+    font-size: 26px;
+  }
+
   .brand {
     gap: 8px;
   }
@@ -691,6 +765,10 @@
   .copy-paragraph-button {
     opacity: 0.72;
     transform: none;
+  }
+
+  .paragraph-container {
+    padding-right: 48px;
   }
 
   .feedback-container {

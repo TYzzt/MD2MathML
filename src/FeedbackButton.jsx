@@ -1,19 +1,29 @@
 import { useEffect, useRef, useState } from 'react';
-import { MessageSquare, Send, X } from 'lucide-react';
+import { Check, MessageSquare, Send, X } from 'lucide-react';
+import { trackEvent } from './lib/analytics';
 
-function FeedbackButton() {
+function FeedbackButton({ exportFeedbackRequest = 0 }) {
   const [isOpen, setIsOpen] = useState(false);
+  const [showExportPrompt, setShowExportPrompt] = useState(false);
   const [feedback, setFeedback] = useState('');
   const textareaRef = useRef(null);
+  const previousExportFeedbackRequestRef = useRef(0);
 
   useEffect(() => {
     if (isOpen) textareaRef.current?.focus();
   }, [isOpen]);
 
+  useEffect(() => {
+    if (!exportFeedbackRequest || exportFeedbackRequest === previousExportFeedbackRequestRef.current) return;
+    previousExportFeedbackRequestRef.current = exportFeedbackRequest;
+    setShowExportPrompt(true);
+  }, [exportFeedbackRequest]);
+
   const handleSubmit = (event) => {
     event.preventDefault();
     if (!feedback.trim()) return;
 
+    trackEvent('feedback_submit', { source: 'manual' });
     window.location.href = `mailto:admin@uuuu.site?subject=MD2MathML feedback&body=${encodeURIComponent(feedback.trim())}`;
     setIsOpen(false);
     setFeedback('');
@@ -21,6 +31,37 @@ function FeedbackButton() {
 
   return (
     <div className="feedback-container">
+      {showExportPrompt && !isOpen && (
+        <div className="export-feedback-prompt" role="status">
+          <div>
+            <strong>Is the Word file ready to use?</strong>
+            <button
+              type="button"
+              className="icon-button"
+              onClick={() => setShowExportPrompt(false)}
+              aria-label="Dismiss export feedback"
+            >
+              <X size={16} />
+            </button>
+          </div>
+          <div className="export-feedback-actions">
+            <button type="button" onClick={() => {
+              trackEvent('export_feedback', { result: 'ready', source: 'post_export' });
+              setShowExportPrompt(false);
+            }}>
+              <Check size={14} />
+              Yes
+            </button>
+            <button type="button" onClick={() => {
+              trackEvent('export_feedback', { result: 'needs_work', source: 'post_export' });
+              setShowExportPrompt(false);
+              setIsOpen(true);
+            }}>
+              Needs work
+            </button>
+          </div>
+        </div>
+      )}
       {isOpen && (
         <form className="feedback-panel" onSubmit={handleSubmit}>
           <div className="feedback-panel-header">
@@ -47,7 +88,13 @@ function FeedbackButton() {
       )}
       <button
         className="feedback-button"
-        onClick={() => setIsOpen((open) => !open)}
+        onClick={() => setIsOpen((open) => {
+          if (!open) {
+            trackEvent('feedback_open', { source: 'manual' });
+            setShowExportPrompt(false);
+          }
+          return !open;
+        })}
         aria-label={isOpen ? 'Close feedback form' : 'Send feedback'}
         aria-expanded={isOpen}
         title="Send feedback"

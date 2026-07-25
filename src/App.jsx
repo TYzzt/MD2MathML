@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Check,
   Clipboard,
@@ -10,67 +10,21 @@ import {
   Sparkles,
   Trash2,
 } from 'lucide-react';
-import MarkdownIt from 'markdown-it';
-import temml from '@traeblain/markdown-it-temml';
-import hljs from 'highlight.js';
 import 'highlight.js/styles/github-dark.css';
 import FeedbackButton from './FeedbackButton';
 import SupportUs from './SupportUs';
+import { documentSizeBucket, trackEvent } from './lib/analytics';
+import { copyPlainText, serializeMathElement } from './lib/clipboard';
+import {
+  classifyExportError,
+  downloadDocx,
+  exportErrorMessage,
+  requestDocx,
+} from './lib/export';
+import { initialMarkdown, markdownRenderer } from './lib/markdown';
 import './App.css';
 
 const STORAGE_KEY = 'md2mathml.draft.v1';
-
-const initialMarkdown = `# Markdown + MathML, without the friction
-
-Write Markdown and LaTeX on the left. See the rendered result instantly on the right.
-
-Click any formula to copy its **MathML**, ready to paste into Microsoft Word as an editable equation.
-
-## Math examples
-
-Inline formula: $E=mc^2$
-
-Block formula:
-
-$$
-f(x) = \\int_{-\\infty}^\\infty
-  \\hat f(\\xi)\\,e^{2 \\pi i \\xi x}
-  \\,d\\xi
-$$
-
-## Code example
-
-\`\`\`javascript
-function hello() {
-  console.log("Hello, World!");
-}
-\`\`\`
-`;
-
-const md = new MarkdownIt({
-  highlight(str, lang) {
-    if (lang && hljs.getLanguage(lang)) {
-      try {
-        return `<pre><code class="hljs">${hljs.highlight(str, { language: lang, ignoreIllegals: true }).value}</code></pre>`;
-      } catch {
-        // Fall through to escaped plain text.
-      }
-    }
-    return `<pre><code class="hljs">${md.utils.escapeHtml(str)}</code></pre>`;
-  },
-}).use(temml);
-
-const proxy = (tokens, idx, options, env, self) => self.renderToken(tokens, idx, options);
-const defaultParagraphOpen = md.renderer.rules.paragraph_open || proxy;
-const defaultParagraphClose = md.renderer.rules.paragraph_close || proxy;
-
-md.renderer.rules.paragraph_open = (tokens, idx, options, env, self) => `
-  <div class="paragraph-container">
-    <button class="copy-paragraph-button" type="button" aria-label="Copy paragraph">Copy</button>
-    ${defaultParagraphOpen(tokens, idx, options, env, self)}`;
-
-md.renderer.rules.paragraph_close = (tokens, idx, options, env, self) =>
-  `${defaultParagraphClose(tokens, idx, options, env, self)}</div>`;
 
 function getInitialMarkdown() {
   try {
@@ -82,19 +36,19 @@ function getInitialMarkdown() {
 
 function App() {
   const [markdown, setMarkdown] = useState(getInitialMarkdown);
-  const [html, setHtml] = useState(() => md.render(getInitialMarkdown()));
+  const html = useMemo(() => markdownRenderer.render(markdown), [markdown]);
   const [notification, setNotification] = useState({ visible: false, text: '' });
   const [showSupportUs, setShowSupportUs] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [activePane, setActivePane] = useState('editor');
+  const [exportFeedbackRequest, setExportFeedbackRequest] = useState(0);
   const fileInputRef = useRef(null);
   const previewRef = useRef(null);
   const moreMenuRef = useRef(null);
   const notificationTimerRef = useRef(null);
 
   useEffect(() => {
-    setHtml(md.render(markdown));
     const timer = window.setTimeout(() => {
       try {
         window.localStorage.setItem(STORAGE_KEY, markdown);
@@ -153,54 +107,44 @@ function App() {
     }, 2200);
   };
 
-  const fallbackCopy = (textToCopy, successMessage, failureMessage) => {
-    const textArea = document.createElement('textarea');
-    textArea.value = textToCopy;
-    textArea.style.position = 'fixed';
-    textArea.style.top = '-9999px';
-    document.body.appendChild(textArea);
-    textArea.select();
-
-    let success = false;
+  const copyText = async (text, successMessage, failureMessage, eventName, source) => {
     try {
-      success = document.execCommand('copy');
+      const method = await copyPlainText(text);
+      showNotification(successMessage);
+      trackEvent(eventName, { method, source });
     } catch {
-      success = false;
-    }
-    document.body.removeChild(textArea);
-    showNotification(success ? successMessage : failureMessage);
-  };
-
-  const copyText = (text, successMessage, failureMessage) => {
-    if (navigator.clipboard?.writeText) {
-      navigator.clipboard.writeText(text)
-        .then(() => showNotification(successMessage))
-        .catch(() => fallbackCopy(text, successMessage, failureMessage));
-    } else {
-      fallbackCopy(text, successMessage, failureMessage);
+      showNotification(failureMessage);
     }
   };
 
-  const copyMathElement = (mathElement) => {
-    const mathClone = mathElement.cloneNode(true);
-    mathClone.removeAttribute('title');
-    mathClone.removeAttribute('tabindex');
-    mathClone.removeAttribute('role');
-    mathClone.removeAttribute('aria-label');
-    mathClone.setAttribute('xmlns', 'http://www.w3.org/1998/Math/MathML');
-    copyText(mathClone.outerHTML, 'MathML copied', 'Could not copy MathML');
+  const copyMathElement = (mathElement, source) => {
+    void copyText(
+      serializeMathElement(mathElement),
+      'MathML copied',
+      'Could not copy MathML',
+      'formula_copy',
+      source,
+    );
   };
 
   const handlePreviewInteraction = (event) => {
     const paragraphButton = event.target.closest('.copy-paragraph-button');
     if (paragraphButton) {
       const paragraph = paragraphButton.closest('.paragraph-container')?.querySelector('p');
-      if (paragraph) copyText(paragraph.innerText, 'Paragraph copied', 'Could not copy paragraph');
+      if (paragraph) {
+        void copyText(
+          paragraph.innerText,
+          'Paragraph copied',
+          'Could not copy paragraph',
+          'paragraph_copy',
+          'pointer',
+        );
+      }
       return;
     }
 
     const mathElement = event.target.closest('math');
-    if (mathElement) copyMathElement(mathElement);
+    if (mathElement) copyMathElement(mathElement, 'pointer');
   };
 
   const handlePreviewKeyDown = (event) => {
@@ -208,14 +152,14 @@ function App() {
     const mathElement = event.target.closest('math');
     if (!mathElement) return;
     event.preventDefault();
-    copyMathElement(mathElement);
+    copyMathElement(mathElement, 'keyboard');
   };
 
   const handlePreviewContextMenu = (event) => {
     const mathElement = event.target.closest('math');
     if (!mathElement) return;
     event.preventDefault();
-    copyMathElement(mathElement);
+    copyMathElement(mathElement, 'context_menu');
   };
 
   const handleFileChange = (event) => {
@@ -227,6 +171,10 @@ function App() {
       setMarkdown(loadEvent.target.result);
       setActivePane('editor');
       showNotification(`${file.name} loaded`);
+      trackEvent('file_import', {
+        size_bucket: documentSizeBucket(loadEvent.target.result.length),
+        source: 'file',
+      });
     };
     reader.onerror = () => showNotification('Could not read that file');
     reader.readAsText(file);
@@ -241,30 +189,22 @@ function App() {
 
     setIsDownloading(true);
     setShowMoreMenu(false);
+    const analyticsParameters = {
+      size_bucket: documentSizeBucket(markdown.length),
+      template: template || 'default',
+    };
+    trackEvent('docx_export_start', analyticsParameters);
 
     try {
-      const file = new File([markdown], 'content.md', { type: 'text/markdown' });
-      const formData = new FormData();
-      formData.append('file', file);
-
-      let url = 'https://markdown-to-word-converter.fly.dev/convert';
-      if (template) url += `?template=${template}`;
-
-      const response = await fetch(url, { method: 'POST', body: formData });
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-
-      const blob = await response.blob();
-      const downloadUrl = window.URL.createObjectURL(blob);
-      const anchor = document.createElement('a');
-      anchor.href = downloadUrl;
-      anchor.download = template ? `${template}.docx` : 'document.docx';
-      document.body.appendChild(anchor);
-      anchor.click();
-      anchor.remove();
-      window.URL.revokeObjectURL(downloadUrl);
+      const blob = await requestDocx(markdown, { template });
+      downloadDocx(blob, template);
       showNotification('Document downloaded');
-    } catch {
-      showNotification('Export failed. Please try again');
+      trackEvent('docx_export_success', analyticsParameters);
+      setExportFeedbackRequest((request) => request + 1);
+    } catch (error) {
+      const errorKind = classifyExportError(error);
+      showNotification(exportErrorMessage(errorKind));
+      trackEvent('docx_export_failure', { ...analyticsParameters, error_kind: errorKind });
     } finally {
       setIsDownloading(false);
     }
@@ -300,12 +240,15 @@ function App() {
           <span className="brand-mark" aria-hidden="true">M²</span>
           <div className="brand-copy">
             <strong>MD2MathML</strong>
-            <span>Markdown equation workspace</span>
+            <span>AI &amp; Markdown to editable Word</span>
           </div>
         </div>
 
         <div className="header-actions">
-          <button className="button support-button" onClick={() => setShowSupportUs(true)} title="Support MD2MathML">
+          <button className="button support-button" onClick={() => {
+            trackEvent('support_open', { source: 'manual' });
+            setShowSupportUs(true);
+          }} title="Support MD2MathML">
             <Heart size={17} />
             <span className="button-label">Support</span>
           </button>
@@ -315,7 +258,7 @@ function App() {
           </button>
           <button className="button primary-button" onClick={() => handleDownloadDocx()} disabled={isDownloading} title="Export as Word document">
             {isDownloading ? <RefreshCcw className="spin" size={17} /> : <Download size={17} />}
-            <span className="button-label">{isDownloading ? 'Exporting' : 'Export .docx'}</span>
+            <span className="button-label">{isDownloading ? 'Preparing Word' : 'Download Word'}</span>
           </button>
           <div className="more-menu-container" ref={moreMenuRef}>
             <button
@@ -330,7 +273,13 @@ function App() {
             {showMoreMenu && (
               <div className="more-menu" role="menu">
                 <button role="menuitem" onClick={() => {
-                  copyText(markdown, 'Markdown copied', 'Could not copy Markdown');
+                  void copyText(
+                    markdown,
+                    'Markdown copied',
+                    'Could not copy Markdown',
+                    'markdown_copy',
+                    'manual',
+                  );
                   setShowMoreMenu(false);
                 }}>
                   <Clipboard size={16} />
@@ -409,7 +358,7 @@ function App() {
         </section>
       </main>
 
-      <FeedbackButton />
+      <FeedbackButton exportFeedbackRequest={exportFeedbackRequest} />
     </div>
   );
 }

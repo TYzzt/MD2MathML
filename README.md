@@ -1,47 +1,60 @@
 # MD2MathML
-md2mathml.uuuu.site/
-### Overview
 
-An online Markdown previewer with LaTeX support, designed to solve the problem of easily migrating math formulas from Markdown to Microsoft Word.
+MD2MathML turns Markdown from ChatGPT, Claude, Gemini, Obsidian, or a local file into a Word document with native, editable equations.
 
-This tool allows you to get a live preview of your Markdown text and, with a simple right-click, copy rendered math formulas as MathML. You can then paste them directly into rich-text editors like Word as **editable equations**.
+Live app: https://md2mathml.uuuu.site/
 
-### Key Features
+## Product workflow
 
-  * **Live Preview**: Instantly renders Markdown as you type in the editor.
-  * **Math Formula Support**: Powered by `@traeblain/markdown-it-temml`, it supports both inline (`$...$`) and block (`$$...$$`) math formulas.
-  * **Copy to Word**: Simply **right-click** any formula in the preview pane to copy its MathML code to the clipboard. Paste it directly into Microsoft Word.
-  * **File Upload**: Supports uploading local `.md` files for quick previewing.
-  * **Syntax Highlighting**: Provides syntax highlighting for various programming languages in code blocks.
+1. Paste or upload Markdown.
+2. Review the rendered document and MathML equations.
+3. Click a formula to copy MathML, or download the whole document as DOCX.
+4. Open the DOCX in Microsoft Word and edit equations as native Office Math objects.
 
-### How to Use
+The app is free, requires no account, stores drafts only in browser local storage, and does not send document content to analytics.
 
-1.  Enter your Markdown text in the left-hand editor pane.
-2.  Alternatively, click the "Upload .md File" button to select a local file.
-3.  The right-hand pane will display the live rendered preview.
-4.  To copy a math formula, hover over it in the preview pane and **right-click**. The MathML code will be copied to your clipboard.
-5.  Open Microsoft Word and paste.
+## Architecture
 
-### Tech Stack
+- `src/`: React/Vite editor, Markdown preview, MathML copy, anonymous funnel events, and DOCX download.
+- `functions/api/convert.js`: same-origin Cloudflare Pages Function that streams conversion requests to the backend without reading document content.
+- `services/docx-converter/`: recovered and reproducible FastAPI/Pandoc service deployed on Fly.io.
+- `tests/`: browser-side regression fixtures and unit tests.
+- `scripts/verify-export.mjs`: production integration check that verifies DOCX equations, tables, footnotes, and embedded media.
 
-  * **Framework**: [React](https://reactjs.org/)
-  * **Build Tool**: [Vite](https://vitejs.dev/)
-  * **Markdown Parsing**: [markdown-it](https://github.com/markdown-it/markdown-it)
-  * **Math Rendering**: [@traeblain/markdown-it-temml](https://github.com/traeblain/markdown-it-temml)
-  * **Syntax Highlighting**: [highlight.js](https://highlightjs.org/)
+Cloudflare Pages deploys the frontend and Pages Function from GitHub. The backend converts Markdown with Pandoc and returns DOCX. The Pages Function can use a `DOCX_EXPORT_URL` runtime variable to switch upstreams without rebuilding the frontend.
 
-### Running Locally
+## Local development
 
-```bash
-# Clone the repository
-git clone <repository-url>
-
-# Navigate to the project directory
-cd MD2MathML
-
-# Install dependencies
+```powershell
 npm install
-
-# Start the development server
 npm run dev
 ```
+
+Vite proxies `/api/convert` to the production converter so local browser testing follows the same-origin production workflow.
+
+## Verification
+
+```powershell
+npm run check
+npm run test:export
+
+cd services/docx-converter
+python -m venv .venv
+.venv\Scripts\python -m pip install -r requirements-dev.txt
+.venv\Scripts\python -m pytest
+```
+
+`npm run check` runs lint, 16 unit tests, and the production build. `npm run test:export` calls the deployed converter and inspects the returned DOCX archive for native Office Math, a Word table, footnotes, and embedded media.
+
+## Deployment
+
+Pushing the repository to GitHub triggers the configured Cloudflare Pages deployment.
+
+Deploy the converter from its directory:
+
+```powershell
+cd services/docx-converter
+flyctl deploy --remote-only
+```
+
+No Cloudflare or Fly credentials belong in this repository. Store runtime values in the provider dashboard or encrypted secret store.

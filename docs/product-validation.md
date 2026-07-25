@@ -44,36 +44,43 @@ The `select2obsidian` browser extension already extracts clean Markdown and form
 
 ## Reddit follow-up checklist
 
-- Reply to the original Safari report with the compatibility fix and ask the reporter to retest.
-- Reply to the PowerPoint request honestly: Word is supported; native editable PowerPoint remains research work.
-- Post the complete DOCX export update in the original thread.
-- Ask thesis and Obsidian users for one failing Markdown sample with private content removed.
-- Record resulting requests here before choosing the next feature.
+- [x] Reply to the original Safari report with the compatibility fix and ask the reporter to retest.
+- [x] Reply to the PowerPoint request honestly: Word is supported; native editable PowerPoint remains research work.
+- [x] Post the complete DOCX export update in the original thread.
+- [x] Ask thesis and Obsidian users for one failing Markdown sample with private content removed.
+- [x] Record the published replies here before choosing the next feature.
 
-## Prepared Reddit replies
+## Published Reddit replies
 
-Status: prepared, not posted. Publish from the authenticated project account, then replace each pending marker with the permalink and date.
+Status: published from `u/Alternative-Match594` on 2026-07-25. No new failure samples or Safari retest results had arrived when this entry was recorded.
 
 ### Safari report
 
 > Thanks again for reporting this. I have now added a Safari-specific clipboard fallback while keeping the normal Clipboard API path for Chrome. I do not have a physical Safari device available for a definitive check, so I do not want to overclaim the fix. Could you please retry it at https://md2mathml.uuuu.site/ and tell me your macOS/iOS and Safari versions if it still fails? A small non-private formula that reproduces the problem would also be very useful.
 
-Permalink: pending.
+Permalink: https://www.reddit.com/r/LaTeX/comments/1n0cstv/comment/ozlocrp/
 
 ### PowerPoint request
 
 > A belated honest update: native editable PowerPoint export is still not supported. The current product reliably exports Word DOCX with editable Office equations, but PowerPoint needs a different Office clipboard/object path, and I do not want to call the Word-to-PowerPoint round trip proper support. If direct PPTX becomes the main request, I will test it as a separate export format rather than promise it prematurely.
 
-Permalink: pending.
+Permalink: https://www.reddit.com/r/LaTeX/comments/1n0cstv/comment/ozloku4/
 
 ### Original thread release update
 
 > Update from the maintainer: MD2MathML can now export the whole Markdown document as a Word file, with native editable equations plus tables, footnotes, and embedded images. It is still free, requires no login, and the browser sends the document only when you explicitly request DOCX conversion. I also added a Safari-specific copy fallback, although that still needs a real Safari retest. If you use this for a thesis, lab report, or Obsidian note, I would especially value a sanitized Markdown sample that fails on accents, multiline equations, citations, or layout. Please remove any private research content first: https://md2mathml.uuuu.site/
 
-Permalink: pending.
+Permalink: https://www.reddit.com/r/LaTeX/comments/1n0cstv/comment/ozlpkgk/
 
 ### Obsidian workflow follow-up
 
-> I maintain MD2MathML and have just hardened the DOCX export path. Equations are native/editable in Word, and the regression document now also covers tables, footnotes, and embedded images. Before building an Obsidian plugin or URL handoff, I would rather understand the real gaps in the safer paste/upload workflow. If anyone has a note that exports badly, could you share the smallest sanitized Markdown sample, especially one with `align`, accents, citations, or images? Please strip private note content first.
+> Glad it helped. I maintain MD2MathML and have just hardened the DOCX export path. Equations are native/editable in Word, and the regression document now also covers tables, footnotes, embedded images, multiline aligned equations, and long notes. Before building an Obsidian plugin or URL handoff, I would rather understand the real gaps in the safer paste/upload workflow. If you still use it and have a note that exports badly, could you share the smallest sanitized Markdown sample, especially one with align, accents, citations, or images? Please strip private note content first.
 
-Permalink: pending.
+Permalink: https://www.reddit.com/r/ObsidianMD/comments/1n73z8o/comment/ozlq1aj/
+
+### Current outcome
+
+- The Safari reporter was directly asked to retest on a real macOS/iOS Safari device; compatibility remains unconfirmed until a result arrives.
+- The PowerPoint limitation is now explicit and does not present the Word round trip as native support.
+- The release update records complete DOCX support and asks thesis/lab-report users for sanitized failures.
+- The Obsidian reply asks for evidence before investing in a plugin or URL-based note handoff.

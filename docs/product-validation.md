@@ -34,9 +34,10 @@ The `select2obsidian` browser extension already extracts clean Markdown and form
 
 ## Release validation
 
-- Frontend unit tests: 16 passing.
+- Frontend unit tests: 17 passing, including a deterministic 120-section rendering case.
 - Converter unit tests: 5 passing.
-- Production DOCX regression: 13 editable Office Math nodes, including a two-row aligned equation encoded with right/left math columns; table, footnote, and image also verified.
+- Production DOCX regression: 5 editable Office Math nodes in the complex fixture, including a two-row aligned equation encoded with right/left math columns; table, footnote, and image also verified.
+- Production long-document regression: 122 KB of Markdown across 120 sections exported through Cloudflare to Fly.io in 2.3 seconds, preserving the final marker and all 120 editable equations.
 - Chromium desktop: MathML clipboard and Word export verified.
 - Mobile 390 x 844: editor/preview switching and no horizontal overflow verified.
 - Safari: synchronous clipboard fallback is covered by unit tests; physical Safari verification remains required before claiming complete compatibility.

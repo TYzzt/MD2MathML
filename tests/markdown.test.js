@@ -9,7 +9,8 @@ describe('Markdown regression document', () => {
     const html = createMarkdownRenderer().render(fixture);
 
     expect(html).toContain('<math');
-    expect(html).toContain('<mtable');
+    expect(html.match(/<mtable/g)).toHaveLength(2);
+    expect(html).toContain('columnalign="right left"');
     expect(html).toContain('<table>');
     expect(html).toContain('<pre><code class="hljs">');
     expect(html).toContain('copy-paragraph-button');

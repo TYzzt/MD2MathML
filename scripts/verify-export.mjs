@@ -22,6 +22,14 @@ const documentXml = zip.readAsText('word/document.xml');
 for (const expected of ['<m:oMath', '<w:tbl', 'Conversion regression document']) {
   if (!documentXml.includes(expected)) throw new Error(`DOCX is missing expected content: ${expected}`);
 }
+const mathMatrices = (documentXml.match(/<m:m>/g) || []).length;
+if (
+  mathMatrices < 2
+  || !documentXml.includes('<m:mcJc m:val="right"')
+  || !documentXml.includes('<m:mcJc m:val="left"')
+) {
+  throw new Error('DOCX is missing the aligned multiline Office Math structure');
+}
 if (!zip.getEntry('word/footnotes.xml')) throw new Error('DOCX is missing native Word footnotes');
 if (!zip.getEntries().some((entry) => entry.entryName.startsWith('word/media/'))) {
   throw new Error('DOCX is missing the embedded regression image');
@@ -31,6 +39,7 @@ console.log(JSON.stringify({
   bytes: buffer.length,
   elapsedMs: Date.now() - startedAt,
   equations: (documentXml.match(/<m:oMath/g) || []).length,
+  mathMatrices,
   footnotes: true,
   images: zip.getEntries().filter((entry) => entry.entryName.startsWith('word/media/')).length,
   ok: true,

@@ -36,7 +36,7 @@ The `select2obsidian` browser extension already extracts clean Markdown and form
 
 - Frontend unit tests: 16 passing.
 - Converter unit tests: 5 passing.
-- Production DOCX regression: equations, table, footnote, and image verified.
+- Production DOCX regression: 13 editable Office Math nodes, including a two-row aligned equation encoded with right/left math columns; table, footnote, and image also verified.
 - Chromium desktop: MathML clipboard and Word export verified.
 - Mobile 390 x 844: editor/preview switching and no horizontal overflow verified.
 - Safari: synchronous clipboard fallback is covered by unit tests; physical Safari verification remains required before claiming complete compatibility.

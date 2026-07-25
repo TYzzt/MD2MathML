@@ -19,6 +19,13 @@ $$
 \hat{x} + \bar{y} + \vec{z} = \widetilde{q}
 $$
 
+$$
+\begin{aligned}
+\nabla \cdot \mathbf{E} &= \frac{\rho}{\varepsilon_0} \\
+\nabla \cdot \mathbf{B} &= 0
+\end{aligned}
+$$
+
 ## Table
 
 | Method | Accuracy |

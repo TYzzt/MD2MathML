@@ -14,7 +14,7 @@ import 'highlight.js/styles/github-dark.css';
 import FeedbackButton from './FeedbackButton';
 import SupportUs from './SupportUs';
 import { documentSizeBucket, trackEvent } from './lib/analytics';
-import { copyPlainText, serializeMathElement } from './lib/clipboard';
+import { copyPlainText, normalizeMathElement, serializeMathElement } from './lib/clipboard';
 import {
   classifyExportError,
   downloadDocx,
@@ -84,6 +84,7 @@ function App() {
     const previewElement = previewRef.current;
     const decorateMath = () => {
       previewElement.querySelectorAll('math').forEach((element) => {
+        normalizeMathElement(element);
         element.setAttribute('title', 'Click to copy MathML');
         element.setAttribute('tabindex', '0');
         element.setAttribute('role', 'button');

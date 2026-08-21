@@ -34,4 +34,12 @@ $$
     expect(html.match(/<h2>/g)).toHaveLength(120);
     expect(html.match(/<math/g)).toHaveLength(240);
   });
+
+  it('preserves Malayalam, fractions, and currency signs in MathML', () => {
+    const html = createMarkdownRenderer().render('$മലയാളം + \\frac{1}{2} + \\$100$');
+
+    expect(html.replace(/<[^>]+>/gu, '')).toContain('മലയാളം');
+    expect(html).toContain('<mfrac><mn>1</mn><mn>2</mn></mfrac>');
+    expect(html).toContain('<mi>$</mi>');
+  });
 });

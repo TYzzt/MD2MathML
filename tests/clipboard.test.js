@@ -1,5 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
-import { copyPlainText, isSafari, serializeMathElement } from '../src/lib/clipboard';
+import {
+  copyPlainText,
+  isSafari,
+  normalizeMathElement,
+  serializeMathElement,
+} from '../src/lib/clipboard';
 
 function fakeDocument(copyResult) {
   const textArea = {
@@ -55,14 +60,41 @@ describe('clipboard compatibility', () => {
 
   it('serializes clean MathML for Word', () => {
     const clone = {
-      outerHTML: '<math xmlns="http://www.w3.org/1998/Math/MathML"><mi>x</mi></math>',
+      outerHTML: '<math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mfrac><mn>1</mn><mn>2</mn></mfrac><mi>$</mi><mtext>&#x20;</mtext><mtext>&nbsp;</mtext></mrow></math>',
+      querySelectorAll: vi.fn(() => []),
       removeAttribute: vi.fn(),
       setAttribute: vi.fn(),
     };
     const element = { cloneNode: vi.fn(() => clone) };
 
-    expect(serializeMathElement(element)).toContain('<math');
+    const serialized = serializeMathElement(element);
+
+    expect(serialized).toContain('<mfrac><mn>1</mn><mn>2</mn></mfrac><mi>$</mi>');
+    expect(serialized).not.toMatch(/&(?:nbsp|#x20);/u);
     expect(clone.setAttribute).toHaveBeenCalledWith('xmlns', 'http://www.w3.org/1998/Math/MathML');
     expect(clone.removeAttribute).toHaveBeenCalledTimes(4);
+  });
+
+  it('joins adjacent Malayalam text nodes so combining letters shape together', () => {
+    const first = {
+      attributes: [],
+      localName: 'mtext',
+      remove: vi.fn(),
+      textContent: 'മ',
+    };
+    const second = {
+      attributes: [],
+      localName: 'mtext',
+      remove: vi.fn(),
+      textContent: 'ലയാളം',
+    };
+    const row = { children: [first, second] };
+    const math = {
+      querySelectorAll: vi.fn((selector) => (selector === 'mtext' ? [first, second] : [row])),
+    };
+
+    expect(normalizeMathElement(math)).toBe(math);
+    expect(first.textContent).toBe('മലയാളം');
+    expect(second.remove).toHaveBeenCalledOnce();
   });
 });

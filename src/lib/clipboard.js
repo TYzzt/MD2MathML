@@ -59,9 +59,40 @@ export async function copyPlainText(
   throw new ClipboardCopyError();
 }
 
+export function normalizeMathElement(mathElement) {
+  mathElement.querySelectorAll('mtext').forEach((element) => {
+    const normalized = element.textContent.normalize('NFC');
+    if (element.textContent !== normalized) element.textContent = normalized;
+  });
+
+  Array.from(mathElement.querySelectorAll('mrow')).reverse().forEach((row) => {
+    let previousText = null;
+    Array.from(row.children).forEach((child) => {
+      if (child.localName !== 'mtext' || child.attributes.length > 0) {
+        previousText = null;
+        return;
+      }
+
+      if (!previousText) {
+        previousText = child;
+        return;
+      }
+
+      previousText.textContent = `${previousText.textContent}${child.textContent}`.normalize('NFC');
+      child.remove();
+    });
+  });
+
+  return mathElement;
+}
+
 export function serializeMathElement(mathElement) {
   const mathClone = mathElement.cloneNode(true);
   ['aria-label', 'role', 'tabindex', 'title'].forEach((attribute) => mathClone.removeAttribute(attribute));
   mathClone.setAttribute('xmlns', 'http://www.w3.org/1998/Math/MathML');
-  return mathClone.outerHTML;
+  normalizeMathElement(mathClone);
+  return mathClone.outerHTML
+    .replace(/&(?:nbsp|#0*160|#x0*a0);/giu, '\u00a0')
+    .replace(/&#(?:0*32|x0*20);/giu, ' ')
+    .normalize('NFC');
 }

@@ -1,0 +1,37 @@
+src/index.css
+  s_367ac256477cb7::t_f9b7d701173d24 39-46
+docs/brand-spec.md
+  s_367ac256477cb7::t_f9b7d701173d24 1-28
+src/lib/site.js
+  s_367ac256477cb7::t_f9b7d701173d24 1-4,6
+  s_367ac256477cb7::t_74907b3388d8a5 5
+src/main.jsx
+  s_367ac256477cb7::t_f9b7d701173d24 5-6,10-20,26
+src/LandingPage.css
+  s_367ac256477cb7::t_f9b7d701173d24 1-353
+index.html
+  s_367ac256477cb7::t_f9b7d701173d24 11
+tests/site.test.js
+  s_367ac256477cb7::t_f9b7d701173d24 1-12,15-16
+  s_367ac256477cb7::t_74907b3388d8a5 13-14
+public/md2mathml-mark.svg
+  s_367ac256477cb7::t_f9b7d701173d24 1-5
+src/LandingPage.jsx
+  s_367ac256477cb7::t_f9b7d701173d24 1-107
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.23",
+  "base_commit_sha": "bc92ca5c420daeb7c71de59aa332c9c30356eb9b",
+  "prompts": {},
+  "sessions": {
+    "s_367ac256477cb7": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a023c5-f44d-72a2-b908-266793ba8bbd",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "zhaotao1 <zhaotao1@lenovo.com>"
+    }
+  }
+}

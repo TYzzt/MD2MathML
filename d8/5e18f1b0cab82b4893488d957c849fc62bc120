@@ -1,0 +1,30 @@
+src/App.jsx
+  s_367ac256477cb7::t_058645860ef55c 17,87
+src/lib/clipboard.js
+  s_367ac256477cb7::t_058645860ef55c 62-88,93-97
+tests/clipboard.test.js
+  s_367ac256477cb7::t_058645860ef55c 2-7,63-64,70-73,77-98
+  s_367ac256477cb7::t_fecb0a94396c7b 99
+tests/markdown.test.js
+  s_367ac256477cb7::t_058645860ef55c 38-39,42-43
+  s_367ac256477cb7::t_50a72edc7fdab5 41
+  s_367ac256477cb7::t_9cf19ff67845cc 37
+  s_367ac256477cb7::t_f21ecbeb83fce0 40
+  s_367ac256477cb7::t_0f81dc94d93990 44
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.23",
+  "base_commit_sha": "d85e18f1b0cab82b4893488d957c849fc62bc120",
+  "prompts": {},
+  "sessions": {
+    "s_367ac256477cb7": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a023c5-f44d-72a2-b908-266793ba8bbd",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "zhaotao1 <zhaotao1@lenovo.com>"
+    }
+  }
+}

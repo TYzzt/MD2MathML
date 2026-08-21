@@ -36,6 +36,14 @@ body,
   overflow: hidden;
 }
 
+html[data-site="landing"],
+html[data-site="landing"] body,
+html[data-site="landing"] #root {
+  height: auto;
+  min-height: 100%;
+  overflow: visible;
+}
+
 button,
 textarea,
 input {

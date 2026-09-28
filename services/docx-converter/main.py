@@ -44,7 +44,13 @@ def healthcheck():
 
 
 def pandoc_command(markdown_path: Path, docx_path: Path, template: Optional[str]) -> list[str]:
-    command = ["pandoc", str(markdown_path), "-o", str(docx_path)]
+    command = [
+        "pandoc",
+        "--from=markdown+markdown_in_html_blocks+raw_html+tex_math_dollars",
+        str(markdown_path),
+        "-o",
+        str(docx_path),
+    ]
     if template is None:
         return command
     if template != "acm":

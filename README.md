@@ -4,6 +4,12 @@ MD2MathML turns Markdown from ChatGPT, Claude, Gemini, Obsidian, or a local file
 
 Live app: https://md2mathml.uuuu.site/
 
+Browser extension:
+
+- Edge: https://microsoftedge.microsoft.com/addons/detail/select2obsidian/foenpoepoknbjfiejgcjcnlkogaophen
+- Chrome/Chromium ZIP: https://github.com/TYzzt/select2obsidian/releases/latest/download/select-to-note-browser-extension.zip
+- Source: https://github.com/TYzzt/select2obsidian
+
 ## Product workflow
 
 1. Paste or upload Markdown.
@@ -22,6 +28,8 @@ The app is free, requires no account, stores drafts only in browser local storag
 - `scripts/verify-export.mjs`: production integration check that verifies DOCX equations, tables, footnotes, and embedded media.
 
 Cloudflare Pages deploys the frontend and Pages Function from GitHub. The backend converts Markdown with Pandoc and returns DOCX. The Pages Function can use a `DOCX_EXPORT_URL` runtime variable to switch upstreams without rebuilding the frontend.
+
+The public conversion endpoint allows credential-free cross-origin POST requests so the Select to Word & Obsidian browser extension can request DOCX downloads. It does not allow cookies or authorization credentials.
 
 ## Local development
 

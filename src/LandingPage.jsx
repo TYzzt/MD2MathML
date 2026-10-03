@@ -1,7 +1,9 @@
-import { ArrowRight, FileDown, ShieldCheck } from 'lucide-react';
+import { ArrowRight, Download, FileDown, MousePointer2, PanelTop, ShieldCheck } from 'lucide-react';
 import './LandingPage.css';
 
 const APP_URL = 'https://md2mathml.uuuu.site/';
+const EDGE_EXTENSION_URL = 'https://microsoftedge.microsoft.com/addons/detail/select2obsidian/foenpoepoknbjfiejgcjcnlkogaophen';
+const CHROME_EXTENSION_URL = 'https://github.com/TYzzt/select2obsidian/releases/latest/download/select-to-note-browser-extension.zip';
 
 function Brand() {
   return (
@@ -68,6 +70,40 @@ function LandingPage() {
               <strong>Download Word</strong>
               <p>Open the DOCX and edit equations as native Office Math objects.</p>
             </li>
+          </ol>
+        </section>
+
+        <section className="landing-extension" aria-labelledby="extension-title">
+          <div className="extension-copy">
+            <p className="landing-kicker">Browser extension</p>
+            <h2 id="extension-title">Select an AI response. Send it where you work.</h2>
+            <p>
+              Select to Word &amp; Obsidian captures part of ChatGPT, Claude, Gemini,
+              DeepSeek, or an ordinary web page while preserving equations, tables, and code.
+            </p>
+            <div className="extension-actions">
+              <a
+                className="landing-primary-action"
+                href={EDGE_EXTENSION_URL}
+                rel="noreferrer"
+                target="_blank"
+              >
+                <PanelTop size={18} aria-hidden="true" /> Install for Edge
+              </a>
+              <a
+                className="landing-secondary-action"
+                href={CHROME_EXTENSION_URL}
+                rel="noreferrer"
+                target="_blank"
+              >
+                <Download size={18} aria-hidden="true" /> Download for Chrome
+              </a>
+            </div>
+          </div>
+          <ol className="extension-flow" aria-label="Select content, then export it to Word or Obsidian">
+            <li><MousePointer2 size={22} aria-hidden="true" /><strong>Select</strong><span>Any web chat or page</span></li>
+            <span aria-hidden="true">→</span>
+            <li><FileDown size={22} aria-hidden="true" /><strong>Export</strong><span>Word, DOCX, or Obsidian</span></li>
           </ol>
         </section>
 

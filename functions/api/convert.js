@@ -1,5 +1,14 @@
 const DEFAULT_UPSTREAM = 'https://markdown-to-word-converter.fly.dev/convert';
 const MAX_CONTENT_LENGTH = 10 * 1024 * 1024;
+const CORS_RESPONSE_HEADERS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Expose-Headers': 'Content-Disposition, Content-Length, Content-Type',
+};
+const CORS_PREFLIGHT_HEADERS = {
+  ...CORS_RESPONSE_HEADERS,
+  'Access-Control-Allow-Headers': 'Content-Type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+};
 
 function upstreamUrl(requestUrl, baseUrl) {
   const incoming = new URL(requestUrl);
@@ -10,7 +19,7 @@ function upstreamUrl(requestUrl, baseUrl) {
 }
 
 function responseHeaders(upstreamHeaders) {
-  const headers = new Headers();
+  const headers = new Headers(CORS_RESPONSE_HEADERS);
   for (const name of ['content-disposition', 'content-length', 'content-type']) {
     const value = upstreamHeaders.get(name);
     if (value) headers.set(name, value);
@@ -23,7 +32,10 @@ function responseHeaders(upstreamHeaders) {
 export async function onRequestPost(context) {
   const contentLength = Number(context.request.headers.get('content-length') || 0);
   if (contentLength > MAX_CONTENT_LENGTH) {
-    return Response.json({ error: 'Document is too large' }, { status: 413 });
+    return Response.json(
+      { error: 'Document is too large' },
+      { headers: CORS_RESPONSE_HEADERS, status: 413 },
+    );
   }
 
   const upstream = await fetch(upstreamUrl(context.request.url, context.env.DOCX_EXPORT_URL), {
@@ -44,7 +56,11 @@ export async function onRequestPost(context) {
 
 export function onRequestOptions() {
   return new Response(null, {
-    headers: { Allow: 'POST, OPTIONS', 'Cache-Control': 'no-store' },
+    headers: {
+      ...CORS_PREFLIGHT_HEADERS,
+      Allow: 'POST, OPTIONS',
+      'Cache-Control': 'no-store',
+    },
     status: 204,
   });
 }

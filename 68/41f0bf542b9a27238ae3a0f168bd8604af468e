@@ -1,0 +1,29 @@
+tests/cloudflare-function.test.js
+  s_9c1576f76f6c88::t_c505493f2c291f 26-29,43,48-52
+src/LandingPage.css
+  s_9c1576f76f6c88::t_c505493f2c291f 13-17,151,209-297,357,373,380,387-390,426-443
+README.md
+  s_9c1576f76f6c88::t_c505493f2c291f 7-12,32-33
+functions/api/convert.js
+  s_9c1576f76f6c88::t_c505493f2c291f 3-11,22,35-38,59-63
+src/LandingPage.jsx
+  s_9c1576f76f6c88::t_225309f95412f3 85-90,93-98
+  s_9c1576f76f6c88::t_c505493f2c291f 1,5-6,76-84,91-92,99-106
+  s_9c1576f76f6c88::t_d77022589cf191 107-109
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "6841f0bf542b9a27238ae3a0f168bd8604af468e",
+  "prompts": {},
+  "sessions": {
+    "s_9c1576f76f6c88": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0ff42-9fa7-7791-8833-36dfa33ea0f5",
+        "model": "gpt-5.6-luna"
+      },
+      "human_author": "zhaotao1 <zhaotao1@lenovo.com>"
+    }
+  }
+}

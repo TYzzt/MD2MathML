@@ -1,0 +1,19 @@
+package-lock.json
+  s_9c1576f76f6c88::t_b84a4709b2247e 915-924,1726-1728,2513-2515
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "000d0014f82cf327960c33efd63ed8a90e807fec",
+  "prompts": {},
+  "sessions": {
+    "s_9c1576f76f6c88": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0ff42-9fa7-7791-8833-36dfa33ea0f5",
+        "model": "gpt-5.6-luna"
+      },
+      "human_author": "zhaotao1 <zhaotao1@lenovo.com>"
+    }
+  }
+}

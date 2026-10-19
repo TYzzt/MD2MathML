@@ -46,7 +46,7 @@ def healthcheck():
 def pandoc_command(markdown_path: Path, docx_path: Path, template: Optional[str]) -> list[str]:
     command = [
         "pandoc",
-        "--from=markdown+markdown_in_html_blocks+raw_html+tex_math_dollars",
+        "--from=markdown+markdown_in_html_blocks+raw_html+tex_math_dollars+tex_math_single_backslash",
         str(markdown_path),
         "-o",
         str(docx_path),

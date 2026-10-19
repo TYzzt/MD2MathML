@@ -19,6 +19,13 @@ Browser extension:
 
 The app is free, requires no account, stores drafts only in browser local storage, and does not send document content to analytics.
 
+Math delimiters supported in the preview and Word export:
+
+- Inline: `$...$` and `\(...\)`.
+- Display: `$$...$$` and `\[...\]`, including multiline equations.
+
+Paste responses using TeX backslash delimiters (for example, from Google Search AI Mode) directly into the editor. Math delimiters in Markdown code spans and code blocks remain literal.
+
 ## Architecture
 
 - `src/`: React/Vite editor, Markdown preview, MathML copy, anonymous funnel events, and DOCX download.

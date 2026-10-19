@@ -250,6 +250,70 @@ function enhancedMathInline(state, silent) {
   return true;
 }
 
+function findMathClose(src, delimiter, start, max) {
+  let pos = start;
+  while ((pos = src.indexOf(delimiter, pos)) !== -1 && pos + delimiter.length <= max) {
+    let slash = pos - 1;
+    while (slash >= 0 && src[slash] === '\\') slash--;
+    if ((pos - 1 - slash) % 2 === 0) return pos;
+    pos += delimiter.length;
+  }
+  return -1;
+}
+
+function backslashMathInline(state, silent) {
+  const start = state.pos;
+  const opening = state.src.slice(start, start + 2);
+  if (opening !== '\\(' && opening !== '\\[') return false;
+
+  const display = opening === '\\[';
+  const close = findMathClose(state.src, display ? '\\]' : '\\)', start + 2, state.posMax);
+  if (close === -1) return false;
+  const content = state.src.slice(start + 2, close);
+  if (!content.trim()) return false;
+
+  if (!silent) {
+    const token = state.push(display ? 'math_display_inline' : 'math_inline', 'math', 0);
+    token.markup = opening;
+    token.content = content;
+  }
+  state.pos = close + 2;
+  return true;
+}
+
+function backslashMathBlock(state, start, end, silent) {
+  if (state.sCount[start] - state.blkIndent >= 4) return false;
+  const pos = state.bMarks[start] + state.tShift[start];
+  if (state.src.slice(pos, pos + 2) !== '\\[') return false;
+
+  for (let next = start; next < end; next++) {
+    const lineStart = state.bMarks[next] + state.tShift[next];
+    const lineEnd = state.eMarks[next];
+    if (next > start && lineStart < lineEnd && state.sCount[next] < state.blkIndent) break;
+
+    const close = findMathClose(state.src, '\\]', next === start ? pos + 2 : lineStart, lineEnd);
+    if (close === -1) continue;
+    // Leave expressions followed by prose to the inline rule.
+    if (state.src.slice(close + 2, lineEnd).trim()) return false;
+    const content = next === start
+      ? state.src.slice(pos + 2, close)
+      : state.src.slice(pos + 2, state.eMarks[start]) + '\n'
+        + state.getLines(start + 1, next, state.blkIndent, true)
+        + state.src.slice(lineStart, close);
+    if (!content.trim()) return false;
+    if (silent) return true;
+
+    const token = state.push('math_block', 'math', 0);
+    token.block = true;
+    token.markup = '\\[';
+    token.content = content;
+    token.map = [start, next + 1];
+    state.line = next + 1;
+    return true;
+  }
+  return false;
+}
+
 export function createMarkdownRenderer() {
   const renderer = new MarkdownIt({
     html: true,
@@ -266,10 +330,15 @@ export function createMarkdownRenderer() {
   }).use(temml).use(footnote);
 
   renderer.inline.ruler.at('math_inline', enhancedMathInline);
+  // Parse TeX delimiters before Markdown consumes the backslash escapes.
+  renderer.inline.ruler.before('escape', 'backslash_math', backslashMathInline);
+  renderer.block.ruler.before('math_block', 'backslash_math_block', backslashMathBlock, {
+    alt: ['paragraph', 'reference', 'blockquote', 'list'],
+  });
 
   renderer.core.ruler.before('block', 'protect_table_math', (state) => {
     state.src = state.src.replace(/^.*\|.*$/gm, (line) => {
-      return line.replace(/(\$\$[\s\S]*?\$\$|\$[^$\n]+?\$)/g, (math) => {
+      return line.replace(/(\$\$[\s\S]*?\$\$|\$[^$\n]+?\$|\\\([^\n]*?\\\)|\\\[[^\n]*?\\\])/g, (math) => {
         return math.replace(/(?<!\\)\|/g, '\uE000');
       });
     });

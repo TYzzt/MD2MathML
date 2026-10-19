@@ -1,3 +1,5 @@
+import { normalizeMathForExport } from './markdown.js';
+
 export const DEFAULT_EXPORT_ENDPOINT = '/api/convert';
 const EXPORT_TIMEOUT_MS = 60_000;
 
@@ -48,7 +50,7 @@ export async function requestDocx(
     timeoutMs = EXPORT_TIMEOUT_MS,
   } = {},
 ) {
-  const file = new File([markdown], 'content.md', { type: 'text/markdown' });
+  const file = new File([normalizeMathForExport(markdown)], 'content.md', { type: 'text/markdown' });
   const formData = new FormData();
   formData.append('file', file);
 

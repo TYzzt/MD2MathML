@@ -403,3 +403,47 @@ export function createMarkdownRenderer() {
 }
 
 export const markdownRenderer = createMarkdownRenderer();
+
+const exportNormalizer = new MarkdownIt({ html: true });
+exportNormalizer.inline.ruler.before('escape', 'dollar_math', enhancedMathInline);
+exportNormalizer.inline.ruler.before('escape', 'backslash_math', (state, silent) => {
+  const start = state.pos;
+  if (!backslashMathInline(state, silent)) return false;
+  if (!silent) {
+    const token = state.tokens.at(-1);
+    const delimiter = token.markup === '\\[' ? '$$' : '$';
+    state.env.replacements.push({
+      start: state.env.offset + start,
+      end: state.env.offset + state.pos,
+      content: delimiter + token.content.trim() + delimiter,
+    });
+  }
+  return true;
+});
+
+// Older converter deployments only accept dollar delimiters. Normalize the
+// upload without changing the editor draft or literal Markdown code.
+export function normalizeMathForExport(markdown) {
+  if (!markdown.includes('\\(') && !markdown.includes('\\[')) return markdown;
+  const lineOffsets = [0];
+  for (const match of markdown.matchAll(/\n/g)) lineOffsets.push(match.index + 1);
+  const env = { offset: 0, replacements: [] };
+  const codeBlocks = markdownRenderer.parse(markdown, {}).filter((token) =>
+    token.type === 'fence' || token.type === 'code_block'
+    || (token.type === 'html_block' && /^\s*<(?:pre|script|style|textarea)\b/i.test(token.content)));
+
+  for (const token of codeBlocks) {
+    const start = lineOffsets[token.map[0]];
+    exportNormalizer.inline.parse(markdown.slice(env.offset, start), exportNormalizer, env, []);
+    env.offset = lineOffsets[token.map[1]] ?? markdown.length;
+  }
+  exportNormalizer.inline.parse(markdown.slice(env.offset), exportNormalizer, env, []);
+
+  let result = '';
+  let offset = 0;
+  for (const replacement of env.replacements) {
+    result += markdown.slice(offset, replacement.start) + replacement.content;
+    offset = replacement.end;
+  }
+  return result + markdown.slice(offset);
+}

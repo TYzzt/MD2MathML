@@ -26,6 +26,8 @@ Math delimiters supported in the preview and Word export:
 
 Paste responses using TeX backslash delimiters (for example, from Google Search AI Mode) directly into the editor. Math delimiters in Markdown code spans and code blocks remain literal.
 
+The browser normalizes backslash math delimiters in the Word upload for compatibility with older converter deployments. The editor draft stays unchanged. Direct API clients sending backslash delimiters require the updated DOCX converter.
+
 ## Architecture
 
 - `src/`: React/Vite editor, Markdown preview, MathML copy, anonymous funnel events, and DOCX download.
